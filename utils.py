@@ -39,7 +39,7 @@ def check_access_token(new_access_token):
         return False
     clear_token = new_access_token.replace('Bearer ', '')
     payload = decode(jwt=clear_token, key=SECRET_KEY, algorithms=['HS256', 'RS256'])
-    if payload['sub'] is None:
+    if payload['sub'] is None or payload['role'] is None:
         return False
     return True
 

@@ -15,8 +15,9 @@ LoginResponse
 	"role": "regular" // premium, admin
 }, 200 //добавила коды ошибок
 
-В случае, если вход не был успешным:
+Ошибки:
 1. Пользователь заблокирован
+UserIsBlockedResponse
 {
 	"success": false,
 	"error": "USER_BLOCKED"
@@ -25,6 +26,7 @@ LoginResponse
 Пользователь должен увидеть сообщение: "Вы заблокированы. Связаться с нами: kakoi-to_email@gmail.com."
 
 2. Пользователь не найден (email не найден в базе)
+UserNotFoundResponse
 {
 	"success": false,
 	"error": "USER_NOT_FOUND"
@@ -32,6 +34,7 @@ LoginResponse
 Пользователь должен увидеть сообщение: "Пользователь не найден. Связаться с нами: kakoi-to_email@gmail.com."
 
 3. Пароль неверный
+IncorrectPasswordResponse
 {
 	"success": false,
 	"error": "INCORRECT_PASSWORD"
@@ -45,10 +48,15 @@ LoginResponse
 В хэдере "email" посылаем проверяемый email, а в ответ получаем:  //поменяла название хэдера
 ValidateEmailResponse
 {
-	"free": true/false
+	"free": true
 }
 
-Если false, то ошибка 409, пользователь видит сообщение: "Данный email уже используется."
+Ошибка:
+EmailIsUnavailable
+{
+	"free": false
+}, 409
+Пользователь видит сообщение: "Данный email уже используется."
 
 Запрос для регистрации:
 RegisterRequest
@@ -271,7 +279,6 @@ BuyPremiumRequest
 GetPremiumResponse
 {
 	"success": true,
-<<<<<<< HEAD
 	"timestamp": 12345678 // дата начала премиум-подписки
 }, 201
 Пользователь должен увидеть сообщение: "Поздравляем с приобретенем премиум-подписки!"
@@ -299,22 +306,9 @@ UserNotFoundResponse
 Невалидные данные проверяем на мобилке.
 Пользователь должен увидеть сообщение: "Данные не валидны. Связаться с нами: kakoi-to_email@gmail.com."
 
-Для получение текущих данных прокидываем в хедере "Bearer access_token", ответ:
-GetCurrentDataResponse
-{
-    "id": 1234,
-=======
-	"timestamp": 12345678
-}
-Пользователь должен увидеть сообщение: "Поздравляем с приобретенем премиум-подписки!"
-
-Невалидные данные проверяем на мобилке.
-Пользователь должен увидеть сообщение: "Данные не валидны. Связаться с нами: kakoi-to_email@gmail.com."
-
 Для получение текущих данных прокидываем в хедере "Bearer access_token", а в body:
 GetCurrentDataRequest
 {
->>>>>>> c4ddb8b (models and main endpoints added)
 	"name": "curr_name",
 	"image": "string_image",
 	"phone": "+7 (999) 123-45-67",
@@ -322,15 +316,32 @@ GetCurrentDataRequest
 	"weight": 50
 }
 
-<<<<<<< HEAD
-=======
 А в ответ получаем:
 GetCurrentDataResponse
 {
-	"success": true/false
-}
+	"success": true
+}, 200
 
->>>>>>> c4ddb8b (models and main endpoints added)
+
+Ошибки:
+Ошибка токена
+TokenErrorResponse
+{
+	"success": false
+}, 401
+
+Если такого пользователя нет:
+UserNotFoundResponse
+{
+	"success": false
+}, 404
+
+Если и не админ, и не юзер:
+RoleNotFoundResponse
+{
+    "success": false
+}, 403
+
 Для изменения личных данных прокидываем в хедере "Bearer access_token", а в body:
 ChangeDataUserRequest
 {
@@ -342,17 +353,35 @@ ChangeDataUserRequest
 }
 
 Для админа просто не отправляем вес
+Невалидные данные проверяем на мобилке.
+Пользователь должен увидеть сообщение: "Данные не валидны. Связаться с нами: kakoi-to_email@gmail.com."
 
 А в ответ получаем:
 ChangeDataUserResponse
 {
-	"success": true/false
-}
+	"success": true
+},200
 Пользователь должен увидеть сообщение: "Данные успешно сохранены"
-Если false, то просто 400, сообщение: "Произошла ошибка"
 
-Невалидные данные проверяем на мобилке.
-Пользователь должен увидеть сообщение: "Данные не валидны. Связаться с нами: kakoi-to_email@gmail.com."
+Ошибки:
+Ошибка токена
+TokenErrorResponse
+{
+	"success": false
+}, 401
+
+Если такого пользователя нет:
+UserNotFoundResponse
+{
+	"success": false
+}, 404
+
+Если и не админ, и не юзер:
+RoleNotFoundResponse
+{
+    "success": false
+}, 403
+
 
 Экран профиля: 
 Для отображения экрана профиля обычного и премиум-пользователя прокидываем в хедере "Bearer access_token", а в body:
@@ -472,7 +501,20 @@ AdminStatisticsResponse
 
 CancelPremiumResponse
 {
-	"success": true/false
-}
+	"success": true
+}, 200
 Пользователь должен увидеть сообщение: "Премиум-подписка успешно отменена"
-Если false, то 400 и сообщение: "Произошла ошибка"
+
+Ошибки:
+Ошибка токена
+TokenErrorResponse
+{
+	"success": false
+}, 401
+
+Если такого пользователя нет:
+UserNotFoundResponse
+{
+	"success": false
+}, 404
+

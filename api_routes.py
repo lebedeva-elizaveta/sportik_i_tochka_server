@@ -100,7 +100,7 @@ def register_user():
     db.session.add(new_user)
     db.session.commit()
 
-    access_token = jwt.encode(payload={'sub': new_user.id}, key=SECRET_KEY, algorithm='HS256')
+    access_token = jwt.encode(payload={'sub': new_user.id, 'role': 'user'}, key=SECRET_KEY, algorithm='HS256')
 
     return jsonify({
         "success": True,
@@ -193,7 +193,7 @@ def register_admin():
     db.session.add(new_admin)
     db.session.commit()
 
-    access_token = jwt.encode(payload={'sub': new_admin.id}, key=SECRET_KEY, algorithm='HS256')
+    access_token = jwt.encode(payload={'sub': new_admin.id, 'role': 'admin'}, key=SECRET_KEY, algorithm='HS256')
 
     return jsonify({
         "success": True,
@@ -285,7 +285,7 @@ def login():
             return jsonify({"success": False, "error": "INCORRECT_PASSWORD"}), 401
         return jsonify({
             "success": True,
-            "access_token": jwt.encode(payload={'sub': admin.id}, key=SECRET_KEY, algorithm='HS256'),
+            "access_token": jwt.encode(payload={'sub': admin.id, 'role': 'admin'}, key=SECRET_KEY, algorithm='HS256'),
             "admin_id": admin.id,
             "role": "admin"
         }), 200
@@ -302,7 +302,7 @@ def login():
             role = "regular"
         return jsonify({
             "success": True,
-            "access_token": jwt.encode(payload={'sub': user.id}, key=SECRET_KEY, algorithm='HS256'),
+            "access_token": jwt.encode(payload={'sub': user.id, 'role': 'user'}, key=SECRET_KEY, algorithm='HS256'),
             "user_id": user.id,
             "role": role
         }), 200
@@ -881,7 +881,7 @@ def buy_premium():
 
     existing_card = Card.query.filter_by(card_number_hash=encrypted_card_number.hex()).first()
     if existing_card:
-        if existing_card.month_hash == encrypted_month.hex() and existing_card.year_hash == encrypted_year.hex()\
+        if existing_card.month_hash == encrypted_month.hex() and existing_card.year_hash == encrypted_year.hex() \
                 and existing_card.cvv_hash == encrypted_cvv.hex():
             start_date = datetime.utcnow()
             end_date = start_date + timedelta(days=30)
@@ -920,12 +920,13 @@ def buy_premium():
 @api_bp.route('/get_current_data', methods=['GET'])
 def get_current_data():
     """
-       Получение данных пользователя
+       Получение данных пользователя (и админа)
        ---
        tags:
          - Пользователи
-       summary: Получить данные пользователя
-       description: Возвращает данные пользователя
+         - Администраторы
+       summary: Получить личные данные
+       description: Возвращает личные данные
        parameters:
          - name: Authorization
            in: header
@@ -956,7 +957,7 @@ def get_current_data():
                  description: Дата рождения пользователя в формате "гггг-мм-дд"
                weight:
                  type: integer
-                 description: Вес пользователя
+                 description: Вес пользователя (для админа нет веса)
          401:
            description: Токен некорректный
            schema:
@@ -973,8 +974,206 @@ def get_current_data():
                free:
                  type: boolean
                  description: Результат запроса
+         403:
+           description: Ошибка, если роль некорректная
+           schema:
+             id: RoleNotFoundResponse
+             properties:
+               free:
+                 type: boolean
+                 description: Результат запроса
 
        """
+    access_token = request.headers.get('Authorization')
+    access_token_is_correct = check_access_token(access_token)
+    if not access_token_is_correct:
+        return jsonify({"success": False}), 401
+    clear_token = access_token.replace('Bearer ', '')
+    payload = decode(jwt=clear_token, key=SECRET_KEY, algorithms=['HS256', 'RS256'])
+    if payload['role'] == 'user':
+        user = User.query.filter_by(id=payload['sub']).first()
+        if not user:
+            return jsonify({"success": False}), 404
+        user_id = payload['sub']
+        return jsonify({
+            "id": user_id,
+            "name": user.name,
+            "image": user.avatar,
+            "phone": user.phone,
+            "birthday": user.birthday.strftime('%Y-%m-%d'),
+            "weight": user.weight
+        }), 200
+    elif payload['role'] == 'admin':
+        admin = Admin.query.filter_by(id=payload['sub']).first()
+        if not admin:
+            return jsonify({"success": False}), 404
+        admin_id = payload['sub']
+        return jsonify({
+            "id": admin_id,
+            "name": admin.name,
+            "image": admin.avatar,
+            "phone": admin.phone,
+            "birthday": admin.birthday.strftime('%Y-%m-%d')
+        }), 200
+    else:
+        return jsonify({"success": False}), 403
+
+
+@api_bp.route('/change_current_data', methods=['PUT'])
+def change_current_data():
+    """
+       Изменение данных пользователя (и админа)
+       ---
+       tags:
+         - Пользователи
+         - Администраторы
+       summary: Изменить личные данные
+       description: Изменяет личные данные
+       parameters:
+         - name: Authorization
+           in: header
+           required: true
+           type: string
+           description: Токен доступа пользователя
+         - name: new_data
+           in: body
+           required: true
+           schema:
+             id: ChangeDataUserRequest
+             properties:
+               name:
+                 type: string
+                 description: Новое имя пользователя
+               image:
+                 type: string
+                 description: Новое фото пользователя
+               phone:
+                 type: string
+                 description: Новый телефон пользователя
+               birthday:
+                 type: string
+                 description: Новая дата рождения пользователя в формате "гггг-мм-дд"
+               weight:
+                 type: integer
+                 description: Новый вес пользователя (для админов нет)
+       responses:
+         200:
+           description: Успешный запрос
+           schema:
+             id: ChangeDataUserResponse
+             type: object
+             properties:
+               success:
+                 type: boolean
+                 description: Результат запроса
+         401:
+           description: Токен некорректный
+           schema:
+             id: TokenErrorResponse
+             properties:
+               success:
+                 type: boolean
+                 description: Результат запроса
+         404:
+           description: Ошибка, если пользователь не найден
+           schema:
+             id: UserNotFoundResponse
+             properties:
+               free:
+                 type: boolean
+                 description: Результат запроса
+         403:
+           description: Ошибка, если роль некорректная
+           schema:
+             id: RoleNotFoundResponse
+             properties:
+               free:
+                 type: boolean
+                 description: Результат запроса
+
+       """
+    access_token = request.headers.get('Authorization')
+    access_token_is_correct = check_access_token(access_token)
+    if not access_token_is_correct:
+        return jsonify({"success": False}), 401
+    clear_token = access_token.replace('Bearer ', '')
+    payload = decode(jwt=clear_token, key=SECRET_KEY, algorithms=['HS256', 'RS256'])
+    new_data = request.json
+    new_name = new_data['name']
+    new_image = new_data['image']
+    new_phone = new_data['phone']
+    new_birthday = new_data['birthday']
+    if payload['role'] == 'user':
+        new_weight = new_data['weight']
+        user = User.query.filter_by(id=payload['sub']).first()
+        if not user:
+            return jsonify({"success": False}), 404
+        user.name = new_name
+        user.avatar = new_image
+        user.phone = new_phone
+        user.birthday = new_birthday
+        user.weight = new_weight
+        db.session.commit()
+        return jsonify({"success": True}), 200
+    elif payload['role'] == 'admin':
+        admin = Admin.query.filter_by(id=payload['sub']).first()
+        if not admin:
+            return jsonify({"success": False}), 404
+        admin.email = admin.email,
+        admin.password_hash = admin.password_hash,
+        admin.name = new_name,
+        admin.avatar = new_image,
+        admin.phone = new_phone,
+        admin.birthday = new_birthday
+        db.session.commit()
+        return jsonify({"success": True}), 200
+    else:
+        return jsonify({"success": False}), 403
+
+
+@api_bp.route('/cancel_premium', methods=['PUT'])
+def cancel_premium():
+    """
+           Отмена премиум-подписки
+           ---
+           tags:
+             - Премиум-пользователи
+           summary: Отменить премиум-подписку
+           description: Отменяет премиум-подписку
+           parameters:
+             - name: Authorization
+               in: header
+               required: true
+               type: string
+               description: Токен доступа пользователя
+           responses:
+             200:
+               description: Успешный запрос
+               schema:
+                 id: CancelPremiumResponse
+                 type: object
+                 properties:
+                   success:
+                     type: boolean
+                     description: Результат запроса
+             401:
+               description: Токен некорректный
+               schema:
+                 id: TokenErrorResponse
+                 properties:
+                   success:
+                     type: boolean
+                     description: Результат запроса
+             404:
+               description: Ошибка, если пользователь не найден
+               schema:
+                 id: UserNotFoundResponse
+                 properties:
+                   free:
+                     type: boolean
+                     description: Результат запроса
+
+           """
     access_token = request.headers.get('Authorization')
     access_token_is_correct = check_access_token(access_token)
     if not access_token_is_correct:
@@ -985,11 +1184,13 @@ def get_current_data():
     if not user:
         return jsonify({"success": False}), 404
     user_id = payload['sub']
-    return jsonify({
-        "id": user_id,
-        "name": user.name,
-        "image": user.avatar,
-        "phone": user.phone,
-        "birthday": user.birthday.strftime('%Y-%m-%d'),
-        "weight": user.weight
-    }), 200
+    premium = Premium.query.filter(
+        Premium.user_id == user_id,
+        Premium.start_date <= datetime.utcnow(),
+        Premium.end_date >= datetime.utcnow()
+    ).order_by(
+        Premium.start_date.desc(), Premium.end_date.desc()
+    ).first()
+    premium.end_date = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True}), 200

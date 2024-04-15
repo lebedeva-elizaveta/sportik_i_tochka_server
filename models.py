@@ -64,7 +64,6 @@ class Card(db.Model):
     card_number_hash = db.Column(db.String(255), nullable=False, unique=True)
     month_hash = db.Column(db.String(255), nullable=False)
     year_hash = db.Column(db.String(255), nullable=False)
-    expiration_date_hash = db.Column(db.String(255), nullable=False)
     cvv_hash = db.Column(db.String(255), nullable=False)
 
 
