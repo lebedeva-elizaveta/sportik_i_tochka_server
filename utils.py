@@ -3,12 +3,11 @@ from jwt import decode
 from config import SECRET_KEY
 from models import User, Premium, Admin
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
 from base64 import urlsafe_b64encode
+
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-import os
 
 
 from datetime import datetime

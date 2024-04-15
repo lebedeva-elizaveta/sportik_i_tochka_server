@@ -271,6 +271,7 @@ BuyPremiumRequest
 GetPremiumResponse
 {
 	"success": true,
+<<<<<<< HEAD
 	"timestamp": 12345678 // дата начала премиум-подписки
 }, 201
 Пользователь должен увидеть сообщение: "Поздравляем с приобретенем премиум-подписки!"
@@ -302,6 +303,18 @@ UserNotFoundResponse
 GetCurrentDataResponse
 {
     "id": 1234,
+=======
+	"timestamp": 12345678
+}
+Пользователь должен увидеть сообщение: "Поздравляем с приобретенем премиум-подписки!"
+
+Невалидные данные проверяем на мобилке.
+Пользователь должен увидеть сообщение: "Данные не валидны. Связаться с нами: kakoi-to_email@gmail.com."
+
+Для получение текущих данных прокидываем в хедере "Bearer access_token", а в body:
+GetCurrentDataRequest
+{
+>>>>>>> c4ddb8b (models and main endpoints added)
 	"name": "curr_name",
 	"image": "string_image",
 	"phone": "+7 (999) 123-45-67",
@@ -309,6 +322,15 @@ GetCurrentDataResponse
 	"weight": 50
 }
 
+<<<<<<< HEAD
+=======
+А в ответ получаем:
+GetCurrentDataResponse
+{
+	"success": true/false
+}
+
+>>>>>>> c4ddb8b (models and main endpoints added)
 Для изменения личных данных прокидываем в хедере "Bearer access_token", а в body:
 ChangeDataUserRequest
 {
