@@ -399,7 +399,7 @@ UserProfileResponse
 		"total_time": 123456789,
 		"total_calories": 123456789
 	},
-	"achievements": [
+	"achievements": [ // 50 км, 100 км, 250 км, 500 км, 1000 км;
 		{
 			"id": 1234,
 			"name": "name_of_achievement",

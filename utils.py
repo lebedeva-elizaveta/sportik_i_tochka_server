@@ -1,14 +1,15 @@
 import base64
+
+from flask import jsonify
 from jwt import decode
 from config import SECRET_KEY
-from models import User, Premium, Admin
+from models import User, Premium, Admin, Admin_User, db, Admin_Premium
 from cryptography.hazmat.primitives import hashes
 from base64 import urlsafe_b64encode
 
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-
 
 from datetime import datetime
 
@@ -67,3 +68,31 @@ def encrypt_data(key, iv, data):
     padded_data = padder.update(data) + padder.finalize()
     ciphertext = encryptor.update(padded_data) + encryptor.finalize()
     return ciphertext
+
+
+def add_admin_user_data(admin_id, user_id, action):
+    admin = Admin.query.get(admin_id)
+    user = User.query.get(user_id)
+    if not admin:
+        return jsonify({"success": False, "message": "Admin not found"}), 404
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    admin_user_data = Admin_User(admin_id=admin_id, user_id=user_id, action=action)
+    db.session.add(admin_user_data)
+    db.session.commit()
+
+    return jsonify({"success": True}), 201
+
+
+def add_admin_premium_data(admin_id, premium_id, action):
+    admin = Admin.query.get(admin_id)
+    premium = Premium.query.get(premium_id)
+    if not admin:
+        return jsonify({"success": False, "message": "Admin not found"}), 404
+    if not premium:
+        return jsonify({"success": False, "message": "Premium not found"}), 404
+    admin_premium_data = Admin_Premium(admin_id=admin_id, premium_id=premium_id, action=action)
+    db.session.add(admin_premium_data)
+    db.session.commit()
+
+    return jsonify({"success": True}), 201

@@ -2,10 +2,12 @@ from datetime import datetime, timedelta
 
 from flask import jsonify, request
 from jwt import decode
-from models import db, User, Admin, Activity, Premium, Admin_User, Admin_Premium, Card
+from models import db, User, Admin, Activity, Premium, Card, Achievement
 from config import SECRET_KEY, AES_KEY, AES_IV
 import jwt
-from utils import check_email, generate_password_hash, check_password, is_premium, check_access_token, encrypt_data
+from utils import check_email, generate_password_hash, check_password, is_premium, check_access_token, encrypt_data, \
+    add_admin_premium_data, add_admin_user_data
+from logic import user_statistics_count, get_achievement
 from flask import Blueprint
 
 api_bp = Blueprint('api', __name__)
@@ -413,6 +415,8 @@ def add_activity():
 
     db.session.add(new_activity)
     db.session.commit()
+    get_achievement(user.id)
+    db.session.commit()
 
     return jsonify({
         "success": True,
@@ -541,7 +545,7 @@ def get_activities():
 @api_bp.route('/admin_actions', methods=['PUT'])
 def admin_actions_put():
     """
-    Действия администратора
+    Действия администратора: заблокировать, разблокировать, забрать премиум
     ---
     tags:
       - Администраторы
@@ -653,7 +657,7 @@ def admin_actions_put():
 @api_bp.route('/admin_actions', methods=['POST'])
 def admin_actions_post():
     """
-    Действия администратора
+    Действия администратора: выдача премиума
     ---
     tags:
       - Администраторы
@@ -750,36 +754,6 @@ def admin_actions_post():
         return jsonify({"success": True, "action": "grant_premium"}), 200
     else:
         return jsonify({"success": False, "message": "Invalid action"}), 400
-
-
-@api_bp.route('/add_admin_user_data', methods=['POST'])
-def add_admin_user_data(admin_id, user_id, action):
-    admin = Admin.query.get(admin_id)
-    user = User.query.get(user_id)
-    if not admin:
-        return jsonify({"success": False, "message": "Admin not found"}), 404
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 404
-    admin_user_data = Admin_User(admin_id=admin_id, user_id=user_id, action=action)
-    db.session.add(admin_user_data)
-    db.session.commit()
-
-    return jsonify({"success": True}), 201
-
-
-@api_bp.route('/add_admin_premium_data', methods=['POST'])
-def add_admin_premium_data(admin_id, premium_id, action):
-    admin = Admin.query.get(admin_id)
-    premium = Premium.query.get(premium_id)
-    if not admin:
-        return jsonify({"success": False, "message": "Admin not found"}), 404
-    if not premium:
-        return jsonify({"success": False, "message": "Premium not found"}), 404
-    admin_premium_data = Admin_Premium(admin_id=admin_id, premium_id=premium_id, action=action)
-    db.session.add(admin_premium_data)
-    db.session.commit()
-
-    return jsonify({"success": True}), 201
 
 
 @api_bp.route('/buy_premium', methods=['POST'])
@@ -1194,3 +1168,130 @@ def cancel_premium():
     premium.end_date = datetime.utcnow()
     db.session.commit()
     return jsonify({"success": True}), 200
+
+
+@api_bp.route('/get_user_profile', methods=['GET'])
+def get_user_profile():
+    """
+        Получение профиля пользователя
+        ---
+        tags:
+          - Пользователи
+        summary: Получить профиль пользователя
+        description: Возвращает данные для профиля пользователя
+        parameters:
+          - name: Authorization
+            in: header
+            required: true
+            type: string
+            description: Токен доступа пользователя
+          - name: period
+            in: query
+            required: true
+            type: string
+            enum: [week, month, year, all_time]
+            description: Период времени для статистики
+        responses:
+          200:
+            description: Успешный запрос
+            schema:
+              id: UserProfileResponse
+              properties:
+                name:
+                  type: string
+                  description: Имя пользователя
+                image:
+                  type: string
+                  description: Фото пользователя
+                statistics:
+                  type: object
+                  description: Статистика пользователя
+                  properties:
+                    total_distance_in_meters:
+                      type: integer
+                      description: Общее расстояние в метрах
+                    total_time:
+                      type: integer
+                      description: Общее время
+                    total_calories:
+                      type: integer
+                      description: Общее количество калорий
+                achievements:
+                  type: array
+                  items:
+                    $ref: '#/definitions/AchievementResponse'
+          401:
+            description: Токен некорректный
+            schema:
+              id: TokenErrorResponse
+              properties:
+                success:
+                  type: boolean
+                  description: Результат запроса
+          404:
+            description: Ошибка, если пользователь или статистика не найдены
+            schema:
+              id: UserNotFoundResponse
+              properties:
+                free:
+                  type: boolean
+                  description: Результат запроса
+        definitions:
+          AchievementResponse:
+            type: object
+            required:
+              - id
+              - name
+              - image
+              - distance
+            properties:
+              id:
+                type: integer
+                description: ID достижения
+              name:
+                type: string
+                description: Название достижения
+              image:
+                type: string
+                description: Картинка достижения
+              distance:
+                type: integer
+                description: Расстояние для получения ачивки
+        """
+    access_token = request.headers.get('Authorization')
+    access_token_is_correct = check_access_token(access_token)
+    if not access_token_is_correct:
+        return jsonify({"success": False}), 401
+    clear_token = access_token.replace('Bearer ', '')
+    payload = decode(jwt=clear_token, key=SECRET_KEY, algorithms=['HS256', 'RS256'])
+    user = User.query.filter_by(id=payload['sub']).first()
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    user_id = payload['sub']
+    period = request.args.get('period')
+    statistics = user_statistics_count(user_id, period)
+    if not statistics:
+        return jsonify({"success": False, "message": "Statistics not found"}), 404
+    user_achievements = Achievement.query.filter_by(user_id=user_id).all()
+    list_of_achievements = []
+    for achievement in user_achievements:
+        achievement_data = {
+            "id": achievement.id,
+            "name": achievement.name,
+            "image": achievement.image,
+            "distance": achievement.distance
+        }
+        list_of_achievements.append(achievement_data)
+    if not list_of_achievements:
+        return jsonify({
+            "name": user.name,
+            "image": user.avatar,
+            "statistics": statistics
+        }), 200
+    return jsonify({
+        "name": user.name,
+        "image": user.avatar,
+        "statistics": statistics,
+        "achievements": list_of_achievements
+    }), 200
+
