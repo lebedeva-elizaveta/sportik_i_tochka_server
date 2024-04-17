@@ -91,7 +91,7 @@ ActivityResponse
 	"activity_type": "running", // cycling or swimming
 	"image": "string_image",
 	"date": "гггг-мм-дд", // формат даты и название поля поменяла
-	"avg_speed": 1234.5, // плавающая точка
+	"avg_speed": 1234.5, // плавающая точка; метры в секунду??
 	"distance_in_meters": 12345,
 	"duration": 123456789, // название поля поменяла, переводим длительность в секунды и передаем на сервер
 	"calories_burned": 1234
@@ -100,7 +100,7 @@ ActivityResponse
 (Список активностей(то, что будем получать)):
 List<ActivityResponse>
 {
-	[
+	"activities": [
 		{
 			"id": 1234,
 			"activity_type": "running", // cycling or swimming
@@ -184,8 +184,22 @@ UserNotFoundResponse
 
 Работа с юзерами(для рейтинга):
 В хедере "аuthorization" прокидываем "Bearer access_token" пользователя.
-Получаем List<UserResponse>.
-UserResponse:
+Получаем List<UserRatingResponse>.
+UserRatingResponse
+{
+    "users": [
+        {
+				UserRating1
+        },
+		{
+				UserRating2
+        },
+		{
+				UserRating3
+        }
+    ]
+}
+UserRating: // переименовала
 {
 	"id": 12345,
 	"name": "John Doe",
@@ -204,23 +218,39 @@ UserResponse:
 		{
 			"id": 1234,
 			"name": "name_of_achievement",
-			"image": "string_image", // На случай, если все же добавим админу возможность создавать кастомные ачивки
+			"image": "string_image",
 			"distance": 123456789
 		},
 		{
 			"id": 1234,
 			"name": "name_of_achievement",
-			"image": "string_image", // На случай, если все же добавим админу возможность создавать кастомные ачивки
+			"image": "string_image",
 			"distance": 123456789
 		},
 		{
 			"id": 1234,
 			"name": "name_of_achievement",
-			"image": "string_image", // На случай, если все же добавим админу возможность создавать кастомные ачивки
+			"image": "string_image",
 			"distance": 123456789
 		}
 	]
-}
+}, 200
+
+В рейтинге НЕ участвуют пользователи с 0 активностей!!!
+Ошибки:
+Ошибка токена
+TokenErrorResponse
+{
+	"success": false
+}, 401
+
+Если что-то не найдено:
+NotFoundResponse
+{
+	"success": false,
+    "message": User not found // "No users yet", "Statistics not found", "Average statistics not found"
+}, 404
+Пользователь, наверное, просто увидит сообщение: "Произошла ошибка."
 
 Для всех действий админа предлагаю передавать в хедере "Bearer access_token" и использовать один общий запрос.
 AdminActionRequest
@@ -419,7 +449,7 @@ UserProfileResponse
 			"distance": 123456789
 		}
 	]
-}
+}, 200
 
 Для отображения экрана профиля админа прокидываем в хедере "Bearer access_token"
 
@@ -471,7 +501,9 @@ PremiumStatisticsResponse
 			"calories_burned": 1234
 		}
 	]
-}
+}, 200
+
+
 
 Для отображения статистики админа прокидываем в хедере "Bearer access_token", а в body:
 AdminStatisticsRequest
@@ -485,12 +517,12 @@ AdminStatisticsResponse
 	"premium_users": 200,
 	"graph_data": [
 		{
-			"timestamp": 12345567889,
+			"date": "гггг-мм-дд", //поменяла формат даты
 			"users_with_premium": 50,
 			"users_without_premium": 950
 		},
 		{
-			"timestamp": 12345567889,
+			"date": "гггг-мм-дд",
 			"users_with_premium": 55,
 			"users_without_premium": 945
 		}
@@ -517,4 +549,3 @@ UserNotFoundResponse
 {
 	"success": false
 }, 404
-

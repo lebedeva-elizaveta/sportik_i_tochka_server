@@ -1,0 +1,1113 @@
+swagger: '2.0'
+info:
+  title: "Спортик и точка"
+  description: "Описание API"
+  version: "1.0"
+paths:
+  /register_user:
+    post:
+      tags:
+        - "Пользователи"
+      summary: "Создать новый аккаунт"
+      parameters:
+        - name: "email"
+          in: "header"
+          required: true
+          type: "string"
+          description: "Email пользователя"
+        - name: "register_data"
+          in: "body"
+          required: true
+          schema:
+            id: "RegisterRequest"
+            required:
+              - "name"
+              - "weight"
+              - "image"
+              - "phone"
+              - "birthday"
+              - "password"
+            properties:
+              name:
+                type: "string"
+                description: "Имя пользователя"
+              weight:
+                type: "integer"
+                description: "Вес пользователя"
+              image:
+                type: "string"
+                description: "Аватар пользователя"
+              phone:
+                type: "string"
+                description: "Телефон пользователя"
+              birthday:
+                type: "string"
+                description: "Дата рождения пользователя в формате 'гггг-мм-дд'"
+              password:
+                type: "string"
+                description: "Пароль пользователя"
+      responses:
+        '201':
+          description: "Успешная регистрация"
+          schema:
+            id: "RegisterResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат регистрации"
+              access_token:
+                type: "string"
+                description: "Токен доступа пользователя"
+              user_id:
+                type: "integer"
+                description: "ID пользователя"
+        '409':
+          description: "Ошибка, если email уже используется"
+          schema:
+            id: "EmailIsUnavailable"
+            properties:
+              free:
+                type: "boolean"
+                description: "Проверка доступности email"
+  /register_admin:
+    post:
+      tags:
+        - "Администраторы"
+      summary: "Создать новый аккаунт администратора"
+      parameters:
+        - name: "email"
+          in: "header"
+          required: true
+          type: "string"
+          description: "Email администратора"
+        - name: "register_data"
+          in: "body"
+          required: true
+          schema:
+            id: "RegisterAdminRequest"
+            required:
+              - "name"
+              - "image"
+              - "phone"
+              - "birthday"
+              - "password"
+            properties:
+              name:
+                type: "string"
+                description: "Имя администратора"
+              image:
+                type: "string"
+                description: "Аватар администратора"
+              phone:
+                type: "string"
+                description: "Телефон администратора"
+              birthday:
+                type: "string"
+                description: "Дата рождения администратора в формате 'гггг-мм-дд'"
+              password:
+                type: "string"
+                description: "Пароль администратора"
+      responses:
+        '201':
+          description: "Успешная регистрация"
+          schema:
+            id: "RegisterAdminResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат регистрации"
+              access_token:
+                type: "string"
+                description: "Токен доступа администратора"
+              admin_id:
+                type: "integer"
+                description: "ID администратора"
+        '409':
+          description: "Ошибка, если email уже используется"
+          schema:
+            id: "EmailIsUnavailable"
+            properties:
+              free:
+                type: "boolean"
+                description: "Проверка доступности email"
+  /login:
+    post:
+      tags:
+        - "Пользователи"
+      summary: "Войти в аккаунт"
+      parameters:
+        - name: "login_data"
+          in: "body"
+          required: true
+          schema:
+            id: "LoginRequest"
+            properties:
+              email:
+                type: "string"
+                description: "Email пользователя"
+              password:
+                type: "string"
+                description: "Пароль пользователя"
+      responses:
+        '200':
+          description: "Успешный вход"
+          schema:
+            id: "LoginResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат входа"
+              access_token:
+                type: "string"
+                description: "Токен доступа пользователя"
+              user_id:
+                type: "integer"
+                description: "ID пользователя"
+              role:
+                type: "string"
+                description: "Роль пользователя"
+        '401':
+          description: "Неправильный пароль"
+          schema:
+            id: "IncorrectPasswordResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат входа"
+              error:
+                type: "string"
+                description: "Ошибка"
+        '403':
+          description: "Пользователь заблокирован"
+          schema:
+            id: "UserIsBlockedResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат входа"
+              error:
+                type: "string"
+                description: "Ошибка"
+        '404':
+          description: "Пользователь не найден"
+          schema:
+            id: "UserNotFoundResponse"
+            properties:
+              success:
+                type: "boolean"
+                description: "Результат входа"
+              error:
+                type: "string"
+                description: "Ошибка"
+  /add_activity:
+    post:
+      tags:
+        - "Активности"
+      summary: "Добавить активность"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+        - name: activity_data
+          in: body
+          required: true
+          schema:
+            id: AddActivityRequest
+            required:
+              - activity_type
+              - date
+              - image
+              - avg_speed
+              - distance_in_meters
+              - duration
+              - calories_burned
+            properties:
+              activity_type:
+                type: string
+                description: Тип активности
+              date:
+                type: string
+                description: Дата активности
+              image:
+                type: string
+                description: Отображение пути на карте
+              avg_speed:
+                type: number
+                format: float
+                description: Средняя скорость
+              distance_in_meters:
+                type: integer
+                description: Расстояние в метрах
+              duration:
+                type: integer
+                description: Длительность активности в секундах
+              calories_burned:
+                type: integer
+                description: Сожженные калории
+      responses:
+        201:
+          description: Успешное добавление активности
+          schema:
+            id: AddActivityResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат добавления активности
+              activity_id:
+                type: integer
+                description: ID активности
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат добавления активности
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            id: UserNotFoundResponse
+            properties:
+              free:
+                type: boolean
+                description: Результат добавления активности
+  /api_bp:
+    get:
+      tags:
+        - "Активности"
+      summary: "Получить список активностей"
+      description: "Возвращает список всех активностей пользователя."
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: ActivityResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат получения активности
+              activities:
+                type: array
+                items:
+                  $ref: '#/definitions/ActivityResponse'
+            examples:
+              NoActivities:
+                description: Нет активностей
+                value:
+                  success: true
+                  message: No activities yet
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат отображения активностей
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            id: UserNotFoundResponse
+            properties:
+              free:
+                type: boolean
+                description: Результат отображения активностей
+    /get_activities:
+      get:
+        tags:
+          - "Активности"
+        summary: "Получить список активностей"
+        description: "Возвращает список всех активностей пользователя."
+        parameters:
+          - name: Authorization
+            in: header
+            required: true
+            type: string
+            description: Токен доступа пользователя
+        responses:
+          200:
+            description: Успешный запрос
+            schema:
+              id: ActivityResponse
+              properties:
+                success:
+                  type: boolean
+                  description: Результат получения активности
+                activities:
+                  type: array
+                  items:
+                    $ref: '#/definitions/ActivityResponse'
+              examples:
+                NoActivities:
+                  description: Нет активностей
+                  value:
+                    success: true
+                    message: No activities yet
+          401:
+            description: Токен некорректный
+            schema:
+              id: TokenErrorResponse
+              properties:
+                success:
+                  type: boolean
+                  description: Результат отображения активностей
+          404:
+            description: Ошибка, если пользователь не найден
+            schema:
+              id: UserNotFoundResponse
+              properties:
+                free:
+                  type: boolean
+                  description: Результат отображения активностей
+
+  definitions:
+    ActivityResponse:
+      type: object
+      required:
+        - id
+        - activity_type
+        - image
+        - date
+        - avg_speed
+        - distance_in_meters
+        - duration
+        - calories_burned
+      properties:
+        id:
+          type: integer
+          description: ID активности
+        activity_type:
+          type: string
+          description: Тип активности (running, cycling, swimming)
+        image:
+          type: string
+          description: Отображение пути на карте
+        date:
+          type: string
+          format: date
+          description: Дата активности в формате "гггг-мм-дд"
+        avg_speed:
+          type: number
+          description: Средняя скорость
+        distance_in_meters:
+          type: integer
+          description: Расстояние в метрах
+        duration:
+          type: integer
+          description: Продолжительность в секундах
+        calories_burned:
+          type: integer
+          description: Сожженные калории
+  /admin_actions:
+    post:
+      tags:
+        - "Администраторы"
+      summary: "Действия администраторов с пользователями"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа администратора
+        - name: request_data
+          in: body
+          required: true
+          schema:
+            id: AdminActionRequest
+            properties:
+              user_id:
+                type: integer
+                description: ID пользователя
+              action:
+                type: string
+                enum: [ block, unblock, revoke_premium, grant_premium ]
+                description: Выбранное действие
+      responses:
+        200:
+          description: Успешное действие
+          schema:
+            id: AdminActionResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              action:
+                type: string
+                description: Выполненное действие
+        400:
+          description: Некорректное действие или запрос
+          schema:
+            id: InvalidActionErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение об ошибке
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+        404:
+          description: Пользователь или админ не найдены
+          schema:
+            id: NotFoundErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение о том, кто не найден
+  /buy_premium:
+    post:
+      tags:
+        - "Премиум"
+      summary: "Покупка премиума пользователем"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+        - name: card_data
+          in: body
+          required: true
+          schema:
+            id: BuyPremiumRequest
+            properties:
+              card_name:
+                type: string
+                description: Имя карты
+              card_number:
+                type: string
+                description: Номер карты
+              month:
+                type: integer
+                description: Месяц срока действия
+              year:
+                type: integer
+                description: Год срока действия
+              cvv:
+                type: integer
+                description: CVV карты
+      responses:
+        201:
+          description: Успешная покупка премиума
+          schema:
+            id: GetPremiumResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат покупки
+              timestamp:
+                type: string
+                description: Дата начала премиум подписки
+        400:
+          description: Некорректные данные карты
+          schema:
+            id: InvalidCardDataResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение о некорректных данных
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+        404:
+          description: Пользователь не найден
+          schema:
+            id: NotFoundErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение о том кто не найден
+  /get_user_data:
+    get:
+      tags:
+        - "Пользователи"
+        - "Администраторы"
+      summary: "Получить личные данные"
+      description: "Возвращает личные данные"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: GetCurrentDataResponse
+            type: object
+            properties:
+              id:
+                type: integer
+                description: ID пользователя
+              name:
+                type: string
+                description: Имя пользователя
+              image:
+                type: string
+                description: Аватар пользователя
+              phone:
+                type: string
+                description: Телефон пользователя
+              birthday:
+                type: string
+                description: Дата рождения пользователя в формате "гггг-мм-дд"
+              weight:
+                type: integer
+                description: Вес пользователя (для админа нет веса)
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+              message:
+                type: string
+                description: Сообщение о том, что не найдено
+        403:
+          description: Ошибка, если роль некорректная
+          schema:
+            id: RoleNotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+  /change_current_data:
+    put:
+      tags:
+        - "Пользователи"
+        - "Администраторы"
+      summary: "Изменить личные данные"
+      description: "Изменяет личные данные"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+        - name: new_data
+          in: body
+          required: true
+          schema:
+            id: ChangeDataUserRequest
+            properties:
+              name:
+                type: string
+                description: Новое имя пользователя
+              image:
+                type: string
+                description: Новое фото пользователя
+              phone:
+                type: string
+                description: Новый телефон пользователя
+              birthday:
+                type: string
+                description: Новая дата рождения пользователя в формате "гггг-мм-дд"
+              weight:
+                type: integer
+                description: Новый вес пользователя (для админов нет)
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: ChangeDataUserResponse
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+              message:
+                type: string
+                description: Сообщение о том, что не найдено
+        403:
+          description: Ошибка, если роль некорректная
+          schema:
+            id: RoleNotFoundResponse
+            properties:
+              free:
+                type: boolean
+                description: Результат запроса
+  /cancel_premium:
+    put:
+      tags:
+        - "Премиум"
+      summary: "Отменить премиум-подписку"
+      description: "Отменяет премиум-подписку"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: CancelPremiumResponse
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+              message:
+                type: string
+                description: Сообщение о том, что не найдено
+  /get_user_profile:
+    get:
+      tags:
+        - "Пользователи"
+      summary: "Получить профиль пользователя"
+      description: "Возвращает данные для профиля пользователя"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+        - name: period
+          in: query
+          required: true
+          type: string
+          enum: [ week, month, year, all_time ]
+          description: Период времени для статистики
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: UserProfileResponse
+            properties:
+              name:
+                type: string
+                description: Имя пользователя
+              image:
+                type: string
+                description: Фото пользователя
+              statistics:
+                type: object
+                description: Статистика пользователя
+                properties:
+                  total_distance_in_meters:
+                    type: integer
+                    description: Общее расстояние в метрах
+                  total_time:
+                    type: integer
+                    description: Общее время
+                  total_calories:
+                    type: integer
+                    description: Общее количество калорий
+              achievements:
+                type: array
+                items:
+                  $ref: '#/definitions/AchievementResponse'
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если пользователь или статистика не найдены
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+              message:
+                type: string
+                description: Сообщение о том, что не найдено
+      definitions:
+        AchievementResponse:
+          type: object
+          required:
+            - id
+            - name
+            - image
+            - distance
+          properties:
+            id:
+              type: integer
+              description: ID достижения
+            name:
+              type: string
+              description: Название достижения
+            image:
+              type: string
+              description: Картинка достижения
+            distance:
+              type: integer
+              description: Расстояние для получения ачивки
+  /get_rating:
+    get:
+      tags:
+        - "Пользователи"
+      summary: "Получить рейтинг пользователей"
+      description: "Возвращает данные для рейтинга пользователей"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: "Токен доступа пользователя"
+      responses:
+        200:
+          description: "Успешный запрос"
+          schema:
+            id: UserRatingResponse
+            properties:
+              users:
+                type: array
+                items:
+                  $ref: '#/definitions/UserRating'
+        401:
+          description: "Токен некорректный"
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: "Результат запроса"
+        404:
+          description: "Ошибка, если пользователь или статистика не найдены"
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: "Результат запроса"
+              message:
+                type: string
+                description: "Сообщение о том, что не найдено"
+      definitions:
+        UserRating:
+          type: object
+          required:
+            - id
+            - name
+            - image
+            - role
+            - rating
+            - total_activities_count
+            - total_distance_in_meters
+            - total_time
+            - total_calories
+            - avg_speed
+            - average_distance_in_meters
+            - average_time
+            - average_calories
+            - achievements
+          properties:
+            id:
+              type: integer
+              description: "ID пользователя"
+            name:
+              type: string
+              description: "Имя пользователя"
+            image:
+              type: string
+              description: "Фото пользователя"
+            role:
+              type: string
+              description: "Роль пользователя"
+            rating:
+              type: integer
+              description: "Место в рейтинге"
+            total_activities_count:
+              type: integer
+              description: "Количество активностей"
+            total_distance_in_meters:
+              type: integer
+              description: "Общее расстояние"
+            total_time:
+              type: integer
+              description: "Общее время"
+            total_calories:
+              type: integer
+              description: "Общее кол-во калорий"
+            avg_speed:
+              type: number
+              format: float
+              description: "Средняя скорость"
+            average_distance_in_meters:
+              type: integer
+              description: "Среднее расстояние"
+            average_time:
+              type: integer
+              description: "Среднее время"
+            average_calories:
+              type: integer
+              description: "Среднее количество калорий"
+            achievements:
+              type: array
+              items:
+                $ref: '#/definitions/AchievementResponse'
+        AchievementResponse:
+          type: object
+          required:
+            - id
+            - name
+            - image
+            - distance
+          properties:
+            id:
+              type: integer
+              description: "ID достижения"
+            name:
+              type: string
+              description: "Название достижения"
+            image:
+              type: string
+              description: "Картинка достижения"
+            distance:
+              type: integer
+              description: "Расстояние для получения ачивки"
+  /premium_statistics:
+    get:
+      tags:
+        - "Премиум"
+      summary: "Получить статистику для премиум-пользователя"
+      description: "Возвращает данные для премиум-статистики"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: "Токен доступа пользователя"
+        - name: period
+          in: query
+          required: true
+          type: string
+          enum: [ week, month, year, all_time ]
+          description: "Период времени для статистики"
+      responses:
+        200:
+          description: "Успешный запрос"
+          schema:
+            id: PremiumStatisticsResponse
+            properties:
+              total_distance_in_meters:
+                type: integer
+                description: "Общее расстояние в метрах"
+              total_time:
+                type: integer
+                description: "Общее время"
+              total_calories:
+                type: integer
+                description: "Общее количество калорий"
+              avg_speed:
+                type: number
+                format: float
+                description: "Средняя скорость"
+              activities:
+                type: array
+                items:
+                  $ref: '#/definitions/PremiumActivityResponse'
+        401:
+          description: "Токен некорректный"
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: "Результат запроса"
+        403:
+          description: "Ошибка, если пользователь не премиум"
+          schema:
+            id: RoleNotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: "Результат запроса"
+        404:
+          description: "Ошибка, если пользователь или статистика не найдены"
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: "Результат запроса"
+              message:
+                type: string
+                description: "Сообщение о том, что не найдено"
+      definitions:
+        PremiumActivityResponse:
+          type: object
+          required:
+            - id
+            - activity_type
+            - image
+            - date
+            - avg_speed
+            - distance_in_meters
+            - duration
+            - calories_burned
+          properties:
+            id:
+              type: integer
+              description: "ID активности"
+            activity_type:
+              type: string
+              description: "Тип активности (running, cycling, swimming)"
+            image:
+              type: string
+              description: "Отображение пути на карте"
+            date:
+              type: string
+              format: date
+              description: "Дата активности в формате 'гггг-мм-дд'"
+            avg_speed:
+              type: number
+              description: "Средняя скорость"
+            distance_in_meters:
+              type: integer
+              description: "Расстояние в метрах"
+            duration:
+              type: integer
+              description: "Продолжительность в секундах"
+            calories_burned:
+              type: integer
+              description: "Сожженные калории"
+  /admin_route_statistics:
+    get:
+      tags:
+        - "Администраторы"
+      summary: "Получить статистику для администраторов"
+      description: "Возвращает данные для статистики администратора"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа администратора
+        - name: period
+          in: query
+          required: true
+          type: string
+          enum: [ week, month, year, all_time ]
+          description: Период времени для статистики
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: AdminStatisticsRequest
+            properties:
+              total_users:
+                type: integer
+                description: Общее количество пользователей приложения
+              premium_users:
+                type: integer
+                description: Общее количество премиум-пользователей приложения
+              graph_data:
+                type: array
+                items:
+                  $ref: '#/definitions/graph_data'
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если пользователь или статистика не найдены
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+              message:
+                type: string
+                description: Сообщение о том, что не найдено
+      definitions:
+        graph_data:
+          type: object
+          required:
+            - date
+            - users_with_premium
+            - users_without_premium
+          properties:
+            date:
+              type: string
+              description: Дата в формате "гггг-мм-дд"
+            users_with_premium:
+              type: integer
+              description: Кол-во премиум-пользователей на тот день
+            users_without_premium:
+              type: integer
+              description: Общее кол-во пользователей на тот день

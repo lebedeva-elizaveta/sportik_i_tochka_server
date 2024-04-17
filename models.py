@@ -14,6 +14,7 @@ class User(db.Model):
     phone = db.Column(db.String(255), nullable=False)
     weight = db.Column(db.Integer, nullable=False)
     avatar = db.Column(db.Text, nullable=True)
+    date_of_registration = db.Column(db.Date, default=datetime.utcnow().strftime('%Y-%m-%d'))
     is_blocked = db.Column(db.Boolean, nullable=False, default=False)
 
 
