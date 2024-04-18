@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from operator import itemgetter
 
 from flask import jsonify, request
@@ -8,9 +8,10 @@ from logic_statistics import user_statistics_count, admin_statistics
 from models import db, User, Admin, Activity, Premium, Achievement
 from config import SECRET_KEY
 import jwt
-from utils import check_email, generate_password_hash, is_premium, \
-    add_admin_premium_data, add_admin_user_data, get_id_from_access_token, add_card_and_buy, get_user_data, \
-    handle_user_login, handle_admin_login, create_activity
+from utils import check_email, is_premium, \
+    add_admin_premium_data, add_admin_user_data, get_id_from_access_token, get_user_data, \
+    handle_user_login, handle_admin_login, create_activity, encrypt_card_data, find_existing_card, \
+    validate_card, create_premium, create_new_card_and_premium, create_user, create_admin, get_all_activities
 from flask import Blueprint
 
 api_bp = Blueprint('api', __name__)
@@ -23,21 +24,8 @@ def register_user():
     email_is_free = check_email(email)
     if not email_is_free:
         return jsonify({"free": False}), 409
-
-    new_user = User(
-        name=register_data['name'],
-        weight=register_data['weight'],
-        avatar=register_data['image'],
-        phone=register_data['phone'],
-        birthday=register_data['birthday'],
-        email=email,
-        password_hash=generate_password_hash(register_data['password'])
-    )
-    db.session.add(new_user)
-    db.session.commit()
-
+    new_user = create_user(register_data, email)
     access_token = jwt.encode(payload={'sub': new_user.id, 'role': 'user'}, key=SECRET_KEY, algorithm='HS256')
-
     return jsonify({
         "success": True,
         "access_token": access_token,
@@ -49,24 +37,11 @@ def register_user():
 def register_admin():
     email = request.headers.get('email')
     register_data = request.json
-
     email_is_free = check_email(email)
     if not email_is_free:
         return jsonify({"free": False}), 409
-
-    new_admin = Admin(
-        name=register_data['name'],
-        avatar=register_data['image'],
-        phone=register_data['phone'],
-        birthday=register_data['birthday'],
-        email=email,
-        password_hash=generate_password_hash(register_data['password'])
-    )
-    db.session.add(new_admin)
-    db.session.commit()
-
+    new_admin = create_admin(register_data, email)
     access_token = jwt.encode(payload={'sub': new_admin.id, 'role': 'admin'}, key=SECRET_KEY, algorithm='HS256')
-
     return jsonify({
         "success": True,
         "access_token": access_token,
@@ -94,11 +69,9 @@ def add_activity():
     user_id = get_id_from_access_token(access_token)
     if not user_id:
         return jsonify({"success": False}), 401
-
     user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({"success": False}), 404
-
     activity_data = request.json
     new_activity = create_activity(user, activity_data)
     return jsonify({
@@ -113,7 +86,6 @@ def get_activities():
     user_id = get_id_from_access_token(access_token)
     if not user_id:
         return jsonify({"success": False}), 401
-
     user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({"success": False}), 404
@@ -121,22 +93,11 @@ def get_activities():
     if not user_activities:
         return jsonify({"success": True, "message": "No activities yet"}), 200
     list_of_activities = []
-    for activity in user_activities:
-        activity_data = {
-            "id": activity.id,
-            "activity_type": activity.type,
-            "image": activity.image,
-            "date": activity.date.strftime('%Y-%m-%d'),
-            "avg_speed": activity.speed,
-            "distance_in_meters": activity.distance,
-            "duration": activity.duration,
-            "calories_burned": activity.calories
-        }
-        list_of_activities.append(activity_data)
+    list_of_activities = get_all_activities(list_of_activities, user_activities)
     return jsonify({"success": True, "activities": list_of_activities}), 200
 
 
-@api_bp.route('/admin_actions', methods=['PUT'])
+@api_bp.route('/admin_actions/modify', methods=['PUT'])
 def admin_actions_put():
     access_token = request.headers.get('Authorization')
     admin_id = get_id_from_access_token(access_token)
@@ -178,7 +139,7 @@ def admin_actions_put():
         return jsonify({"success": False, "message": "Invalid action"}), 400
 
 
-@api_bp.route('/admin_actions', methods=['POST'])
+@api_bp.route('/admin_actions/grant_premium', methods=['POST'])
 def admin_actions_post():
     access_token = request.headers.get('Authorization')
     admin_id = get_id_from_access_token(access_token)
@@ -194,15 +155,7 @@ def admin_actions_post():
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
     if action == "grant_premium":
-        start_date = datetime.utcnow()
-        end_date = start_date + timedelta(days=30)
-        new_premium = Premium(
-            user_id=user_id,
-            start_date=start_date,
-            end_date=end_date
-        )
-        db.session.add(new_premium)
-        db.session.commit()
+        new_premium = create_premium(user_id)
         add_admin_premium_data(admin_id, new_premium.id, action)
         return jsonify({"success": True, "action": "grant_premium"}), 200
     else:
@@ -222,14 +175,23 @@ def buy_premium():
 
     card_data = request.json
 
-    new_premium = Premium(
-        user_id=user_id,
-        start_date=add_card_and_buy(card_data)['start_date'],
-        end_date=add_card_and_buy(card_data)['end_date']
-    )
-    db.session.add(new_premium)
-    db.session.commit()
-    return jsonify({"success": True, "timestamp": add_card_and_buy(card_data)['start_date']}), 201
+    encrypt_card = encrypt_card_data(card_data)
+    card_name = encrypt_card['card_name']
+    encrypted_card_number = encrypt_card['card_number']
+    encrypted_month = encrypt_card['month']
+    encrypted_year = encrypt_card['year']
+    encrypted_cvv = encrypt_card['cvv']
+
+    existing_card = find_existing_card(encrypted_card_number)
+    if existing_card and validate_card(existing_card, encrypted_month, encrypted_year, encrypted_cvv):
+        new_premium = create_premium(user_id)
+        start_date = new_premium.start_date
+    else:
+        create_new_card_and_premium(card_name, encrypted_card_number, encrypted_month, encrypted_year, encrypted_cvv,
+                                    user_id)
+        start_date = datetime.utcnow()
+
+    return jsonify({"success": True, "timestamp": start_date}), 201
 
 
 @api_bp.route('/get_current_data', methods=['GET'])

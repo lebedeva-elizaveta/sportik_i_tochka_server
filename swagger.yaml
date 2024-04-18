@@ -3,6 +3,165 @@ info:
   title: "Спортик и точка"
   description: "Описание API"
   version: "1.0"
+components:
+  schemas:
+    ActivityResponse:
+      type: object
+      required:
+        - id
+        - activity_type
+        - image
+        - date
+        - avg_speed
+        - distance_in_meters
+        - duration
+        - calories_burned
+      properties:
+        id:
+          type: integer
+          description: ID активности
+        activity_type:
+          type: string
+          description: Тип активности (running, cycling, swimming)
+        image:
+          type: string
+          description: Отображение пути на карте
+        date:
+          type: string
+          format: date
+          description: Дата активности в формате "гггг-мм-дд"
+        avg_speed:
+          type: number
+          description: Средняя скорость
+        distance_in_meters:
+          type: integer
+          description: Расстояние в метрах
+        duration:
+          type: integer
+          description: Продолжительность в секундах
+        calories_burned:
+          type: integer
+          description: Сожженные калории
+    PremiumActivityResponse:
+      type: object
+      required:
+        - id
+        - activity_type
+        - image
+        - date
+        - avg_speed
+        - distance_in_meters
+        - duration
+        - calories_burned
+      properties:
+        id:
+          type: integer
+          description: "ID активности"
+        activity_type:
+          type: string
+          description: "Тип активности (running, cycling, swimming)"
+        image:
+          type: string
+          description: "Отображение пути на карте"
+        date:
+          type: string
+          format: date
+          description: "Дата активности в формате 'гггг-мм-дд'"
+        avg_speed:
+          type: number
+          description: "Средняя скорость"
+        distance_in_meters:
+          type: integer
+          description: "Расстояние в метрах"
+        duration:
+          type: integer
+          description: "Продолжительность в секундах"
+        calories_burned:
+          type: integer
+          description: "Сожженные калории"
+    AchievementResponse:
+      type: object
+      required:
+        - id
+        - name
+        - image
+        - distance
+      properties:
+        id:
+          type: integer
+          description: ID достижения
+        name:
+          type: string
+          description: Название достижения
+        image:
+          type: string
+          description: Картинка достижения
+        distance:
+          type: integer
+          description: Расстояние для получения ачивки
+    UserRating:
+      type: object
+      required:
+        - id
+        - name
+        - image
+        - role
+        - rating
+        - total_activities_count
+        - total_distance_in_meters
+        - total_time
+        - total_calories
+        - avg_speed
+        - average_distance_in_meters
+        - average_time
+        - average_calories
+        - achievements
+      properties:
+        id:
+          type: integer
+          description: "ID пользователя"
+        name:
+          type: string
+          description: "Имя пользователя"
+        image:
+          type: string
+          description: "Фото пользователя"
+        role:
+          type: string
+          description: "Роль пользователя"
+        rating:
+          type: integer
+          description: "Место в рейтинге"
+        total_activities_count:
+          type: integer
+          description: "Количество активностей"
+        total_distance_in_meters:
+          type: integer
+          description: "Общее расстояние"
+        total_time:
+          type: integer
+          description: "Общее время"
+        total_calories:
+          type: integer
+          description: "Общее кол-во калорий"
+        avg_speed:
+          type: number
+          format: float
+          description: "Средняя скорость"
+        average_distance_in_meters:
+          type: integer
+          description: "Среднее расстояние"
+        average_time:
+          type: integer
+          description: "Среднее время"
+        average_calories:
+          type: integer
+          description: "Среднее количество калорий"
+        achievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AchievementResponse'
+
 paths:
   /register_user:
     post:
@@ -274,12 +433,13 @@ paths:
               free:
                 type: boolean
                 description: Результат добавления активности
-  /api_bp:
+
+  /get_activities:
     get:
       tags:
-        - "Активности"
-      summary: "Получить список активностей"
-      description: "Возвращает список всех активностей пользователя."
+        - Активности
+      summary: Получить список активностей
+      description: Возвращает список всех активностей пользователя.
       parameters:
         - name: Authorization
           in: header
@@ -287,24 +447,24 @@ paths:
           type: string
           description: Токен доступа пользователя
       responses:
-        200:
+        201:
           description: Успешный запрос
           schema:
             id: ActivityResponse
             properties:
               success:
                 type: boolean
-                description: Результат получения активности
+                description: Результат добавления активности
               activities:
                 type: array
                 items:
-                  $ref: '#/definitions/ActivityResponse'
+                  $ref: '#/components/schemas/ActivityResponse'
             examples:
-              NoActivities:
-                description: Нет активностей
-                value:
-                  success: true
-                  message: No activities yet
+            NoActivities:
+              description: Нет активностей
+              value:
+                success: true
+                message: No activities yet
         401:
           description: Токен некорректный
           schema:
@@ -321,97 +481,12 @@ paths:
               free:
                 type: boolean
                 description: Результат отображения активностей
-    /get_activities:
-      get:
-        tags:
-          - "Активности"
-        summary: "Получить список активностей"
-        description: "Возвращает список всех активностей пользователя."
-        parameters:
-          - name: Authorization
-            in: header
-            required: true
-            type: string
-            description: Токен доступа пользователя
-        responses:
-          200:
-            description: Успешный запрос
-            schema:
-              id: ActivityResponse
-              properties:
-                success:
-                  type: boolean
-                  description: Результат получения активности
-                activities:
-                  type: array
-                  items:
-                    $ref: '#/definitions/ActivityResponse'
-              examples:
-                NoActivities:
-                  description: Нет активностей
-                  value:
-                    success: true
-                    message: No activities yet
-          401:
-            description: Токен некорректный
-            schema:
-              id: TokenErrorResponse
-              properties:
-                success:
-                  type: boolean
-                  description: Результат отображения активностей
-          404:
-            description: Ошибка, если пользователь не найден
-            schema:
-              id: UserNotFoundResponse
-              properties:
-                free:
-                  type: boolean
-                  description: Результат отображения активностей
 
-  definitions:
-    ActivityResponse:
-      type: object
-      required:
-        - id
-        - activity_type
-        - image
-        - date
-        - avg_speed
-        - distance_in_meters
-        - duration
-        - calories_burned
-      properties:
-        id:
-          type: integer
-          description: ID активности
-        activity_type:
-          type: string
-          description: Тип активности (running, cycling, swimming)
-        image:
-          type: string
-          description: Отображение пути на карте
-        date:
-          type: string
-          format: date
-          description: Дата активности в формате "гггг-мм-дд"
-        avg_speed:
-          type: number
-          description: Средняя скорость
-        distance_in_meters:
-          type: integer
-          description: Расстояние в метрах
-        duration:
-          type: integer
-          description: Продолжительность в секундах
-        calories_burned:
-          type: integer
-          description: Сожженные калории
-  /admin_actions:
-    post:
+  /admin_actions/modify:
+    put:
       tags:
         - "Администраторы"
-      summary: "Действия администраторов с пользователями"
+      summary: "Модификация статуса пользователя"
       parameters:
         - name: Authorization
           in: header
@@ -422,20 +497,20 @@ paths:
           in: body
           required: true
           schema:
-            id: AdminActionRequest
+            id: AdminModifyActionRequest
             properties:
               user_id:
                 type: integer
                 description: ID пользователя
               action:
                 type: string
-                enum: [ block, unblock, revoke_premium, grant_premium ]
+                enum: [ block, unblock, revoke_premium ]
                 description: Выбранное действие
       responses:
         200:
-          description: Успешное действие
+          description: Успешная модификация статуса пользователя
           schema:
-            id: AdminActionResponse
+            id: AdminModifyActionResponse
             properties:
               success:
                 type: boolean
@@ -446,7 +521,7 @@ paths:
         400:
           description: Некорректное действие или запрос
           schema:
-            id: InvalidActionErrorResponse
+            id: InvalidModifyActionErrorResponse
             properties:
               success:
                 type: boolean
@@ -463,7 +538,70 @@ paths:
                 type: boolean
                 description: Результат действия
         404:
-          description: Пользователь или админ не найдены
+          description: Пользователь или администратор не найдены
+          schema:
+            id: NotFoundErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение о том, кто не найден
+
+  /admin_actions/grant_premium:
+    post:
+      tags:
+        - "Администраторы"
+      summary: "Выдача премиума пользователю"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа администратора
+        - name: request_data
+          in: body
+          required: true
+          schema:
+            id: AdminGrantPremiumRequest
+            properties:
+              user_id:
+                type: integer
+                description: ID пользователя
+      responses:
+        200:
+          description: Успешная выдача премиума пользователю
+          schema:
+            id: AdminGrantPremiumResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              action:
+                type: string
+                description: Выполненное действие
+        400:
+          description: Некорректное действие или запрос
+          schema:
+            id: InvalidGrantPremiumErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+              message:
+                type: string
+                description: Сообщение об ошибке
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат действия
+        404:
+          description: Пользователь или администратор не найдены
           schema:
             id: NotFoundErrorResponse
             properties:
@@ -547,7 +685,7 @@ paths:
               message:
                 type: string
                 description: Сообщение о том кто не найден
-  /get_user_data:
+  /get_current_data:
     get:
       tags:
         - "Пользователи"
@@ -770,7 +908,7 @@ paths:
               achievements:
                 type: array
                 items:
-                  $ref: '#/definitions/AchievementResponse'
+                  $ref: '#/components/schemas/AchievementResponse'
         401:
           description: Токен некорректный
           schema:
@@ -790,27 +928,6 @@ paths:
               message:
                 type: string
                 description: Сообщение о том, что не найдено
-      definitions:
-        AchievementResponse:
-          type: object
-          required:
-            - id
-            - name
-            - image
-            - distance
-          properties:
-            id:
-              type: integer
-              description: ID достижения
-            name:
-              type: string
-              description: Название достижения
-            image:
-              type: string
-              description: Картинка достижения
-            distance:
-              type: integer
-              description: Расстояние для получения ачивки
   /get_rating:
     get:
       tags:
@@ -832,7 +949,7 @@ paths:
               users:
                 type: array
                 items:
-                  $ref: '#/definitions/UserRating'
+                  $ref: '#/components/schemas/UserRating'
         401:
           description: "Токен некорректный"
           schema:
@@ -852,89 +969,6 @@ paths:
               message:
                 type: string
                 description: "Сообщение о том, что не найдено"
-      definitions:
-        UserRating:
-          type: object
-          required:
-            - id
-            - name
-            - image
-            - role
-            - rating
-            - total_activities_count
-            - total_distance_in_meters
-            - total_time
-            - total_calories
-            - avg_speed
-            - average_distance_in_meters
-            - average_time
-            - average_calories
-            - achievements
-          properties:
-            id:
-              type: integer
-              description: "ID пользователя"
-            name:
-              type: string
-              description: "Имя пользователя"
-            image:
-              type: string
-              description: "Фото пользователя"
-            role:
-              type: string
-              description: "Роль пользователя"
-            rating:
-              type: integer
-              description: "Место в рейтинге"
-            total_activities_count:
-              type: integer
-              description: "Количество активностей"
-            total_distance_in_meters:
-              type: integer
-              description: "Общее расстояние"
-            total_time:
-              type: integer
-              description: "Общее время"
-            total_calories:
-              type: integer
-              description: "Общее кол-во калорий"
-            avg_speed:
-              type: number
-              format: float
-              description: "Средняя скорость"
-            average_distance_in_meters:
-              type: integer
-              description: "Среднее расстояние"
-            average_time:
-              type: integer
-              description: "Среднее время"
-            average_calories:
-              type: integer
-              description: "Среднее количество калорий"
-            achievements:
-              type: array
-              items:
-                $ref: '#/definitions/AchievementResponse'
-        AchievementResponse:
-          type: object
-          required:
-            - id
-            - name
-            - image
-            - distance
-          properties:
-            id:
-              type: integer
-              description: "ID достижения"
-            name:
-              type: string
-              description: "Название достижения"
-            image:
-              type: string
-              description: "Картинка достижения"
-            distance:
-              type: integer
-              description: "Расстояние для получения ачивки"
   /premium_statistics:
     get:
       tags:
@@ -975,7 +1009,7 @@ paths:
               activities:
                 type: array
                 items:
-                  $ref: '#/definitions/PremiumActivityResponse'
+                  $ref: '#/components/schemas/PremiumActivityResponse'
         401:
           description: "Токен некорректный"
           schema:
@@ -1003,44 +1037,6 @@ paths:
               message:
                 type: string
                 description: "Сообщение о том, что не найдено"
-      definitions:
-        PremiumActivityResponse:
-          type: object
-          required:
-            - id
-            - activity_type
-            - image
-            - date
-            - avg_speed
-            - distance_in_meters
-            - duration
-            - calories_burned
-          properties:
-            id:
-              type: integer
-              description: "ID активности"
-            activity_type:
-              type: string
-              description: "Тип активности (running, cycling, swimming)"
-            image:
-              type: string
-              description: "Отображение пути на карте"
-            date:
-              type: string
-              format: date
-              description: "Дата активности в формате 'гггг-мм-дд'"
-            avg_speed:
-              type: number
-              description: "Средняя скорость"
-            distance_in_meters:
-              type: integer
-              description: "Расстояние в метрах"
-            duration:
-              type: integer
-              description: "Продолжительность в секундах"
-            calories_burned:
-              type: integer
-              description: "Сожженные калории"
   /admin_route_statistics:
     get:
       tags:
@@ -1074,7 +1070,7 @@ paths:
               graph_data:
                 type: array
                 items:
-                  $ref: '#/definitions/graph_data'
+                  $ref: '#/components/schemas/graph_data'
         401:
           description: Токен некорректный
           schema:
@@ -1094,20 +1090,4 @@ paths:
               message:
                 type: string
                 description: Сообщение о том, что не найдено
-      definitions:
-        graph_data:
-          type: object
-          required:
-            - date
-            - users_with_premium
-            - users_without_premium
-          properties:
-            date:
-              type: string
-              description: Дата в формате "гггг-мм-дд"
-            users_with_premium:
-              type: integer
-              description: Кол-во премиум-пользователей на тот день
-            users_without_premium:
-              type: integer
-              description: Общее кол-во пользователей на тот день
+

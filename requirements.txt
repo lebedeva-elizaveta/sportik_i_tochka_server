@@ -1,0 +1,7 @@
+SQLAlchemy~=2.0.29
+alembic~=1.13.1
+flasgger~=0.9.7.1
+flask~=3.0.2
+PyJWT~=2.8.0
+cryptography~=42.0.5
+pytz~=2024.1

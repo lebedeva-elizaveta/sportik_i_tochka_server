@@ -225,3 +225,103 @@ def create_activity(user, activity_data):
     get_achievement(user.id)
     db.session.commit()
     return new_activity
+
+
+def encrypt_card_data(card_data):
+    card_name = card_data['card_name']
+    card_number = card_data['card_number']
+    month = str(card_data['month'])
+    year = str(card_data['year'])
+    cvv = str(card_data['cvv'])
+    encrypted_card_number = encrypt_data(AES_KEY, AES_IV, card_number.encode()).hex()
+    encrypted_month = encrypt_data(AES_KEY, AES_IV, month.encode()).hex()
+    encrypted_year = encrypt_data(AES_KEY, AES_IV, year.encode()).hex()
+    encrypted_cvv = encrypt_data(AES_KEY, AES_IV, cvv.encode()).hex()
+    return {
+        "card_name" : card_name,
+        "card_number": encrypted_card_number,
+        "month": encrypted_month,
+        "year": encrypted_year,
+        "cvv": encrypted_cvv
+    }
+
+
+def find_existing_card(encrypted_card_number):
+    return Card.query.filter_by(card_number_hash=encrypted_card_number).first()
+
+
+def validate_card(existing_card, encrypted_month, encrypted_year, encrypted_cvv):
+    return (existing_card.month_hash == encrypted_month and
+            existing_card.year_hash == encrypted_year and
+            existing_card.cvv_hash == encrypted_cvv)
+
+
+def create_new_card_and_premium(card_name, encrypted_card_number, encrypted_month, encrypted_year, encrypted_cvv, user_id):
+    new_card = Card(
+        card_name=card_name,
+        card_number_hash=encrypted_card_number,
+        month_hash=encrypted_month,
+        year_hash=encrypted_year,
+        cvv_hash=encrypted_cvv
+    )
+    db.session.add(new_card)
+    db.session.commit()
+    create_premium(user_id)
+
+
+def create_premium(user_id):
+    start_date = datetime.utcnow()
+    end_date = start_date + timedelta(days=30)
+    new_premium = Premium(
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date
+    )
+    db.session.add(new_premium)
+    db.session.commit()
+    return new_premium
+
+
+def create_user(register_data, email):
+    new_user = User(
+        name=register_data['name'],
+        weight=register_data['weight'],
+        avatar=register_data['image'],
+        phone=register_data['phone'],
+        birthday=register_data['birthday'],
+        email=email,
+        password_hash=generate_password_hash(register_data['password'])
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return new_user
+
+
+def create_admin(register_data, email):
+    new_admin = Admin(
+        name=register_data['name'],
+        avatar=register_data['image'],
+        phone=register_data['phone'],
+        birthday=register_data['birthday'],
+        email=email,
+        password_hash=generate_password_hash(register_data['password'])
+    )
+    db.session.add(new_admin)
+    db.session.commit()
+    return new_admin
+
+
+def get_all_activities(list_of_activities, user_activities):
+    for activity in user_activities:
+        activity_data = {
+            "id": activity.id,
+            "activity_type": activity.type,
+            "image": activity.image,
+            "date": activity.date.strftime('%Y-%m-%d'),
+            "avg_speed": activity.speed,
+            "distance_in_meters": activity.distance,
+            "duration": activity.duration,
+            "calories_burned": activity.calories
+        }
+        list_of_activities.append(activity_data)
+    return list_of_activities
