@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from database import db
+from app.database import db
 
 
 class Premium(db.Model):

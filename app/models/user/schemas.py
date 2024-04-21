@@ -1,5 +1,3 @@
-from typing import Optional
-
 from marshmallow import Schema, fields, validate
 
 

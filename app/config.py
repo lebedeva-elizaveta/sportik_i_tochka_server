@@ -1,3 +1,19 @@
-SECRET_KEY = '32bb69573d6fd37dd31d76491be0b210ae0f7b43dd7f8a9d5780937b36c00860'
-AES_KEY = b'>\x10\xdb[\xb1\xc6\x03\x96\x9b$l\xb4}\xf3\x87^AL\x01\xc9\xe7\xa7\x05\x8c\x07/\x99\xc1\xbf~M\xe7'
-AES_IV = b'\xf5\xa3\xe85\xc0\xf4\x8b:S\xcb~,\t\x18\xfb9'
+import ast
+import binascii
+import os
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+
+load_dotenv()
+
+
+class Settings(BaseSettings):
+    database_url: str = "postgresql://postgres:1234@localhost/sportik_i_tochka"
+    secret_key: str = os.getenv('SECRET_KEY')
+    aes_key: bytes = bytes.fromhex(os.getenv('AES_KEY'))
+    aes_iv: bytes = bytes.fromhex(os.getenv('AES_IV'))
+
+
+ALGORITHM = "HS256"
+
+settings = Settings()

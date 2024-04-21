@@ -6,4 +6,3 @@ class LoginResponseSchema(Schema):
     role = fields.String(required=True)
     success = fields.Boolean(required=True)
     user_id = fields.Integer(required=True)
-
