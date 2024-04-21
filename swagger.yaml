@@ -5,6 +5,12 @@ info:
   version: "1.0"
 components:
   schemas:
+    ActivityType:
+      type: string
+      enum:
+        - running
+        - swimming
+        - cycling
     ActivityResponse:
       type: object
       required:
@@ -182,10 +188,10 @@ paths:
             required:
               - "name"
               - "weight"
-              - "image"
+              - "avatar"
               - "phone"
               - "birthday"
-              - "password"
+              - "password_hash"
             properties:
               name:
                 type: "string"
@@ -193,7 +199,7 @@ paths:
               weight:
                 type: "integer"
                 description: "Вес пользователя"
-              image:
+              avatar:
                 type: "string"
                 description: "Аватар пользователя"
               phone:
@@ -202,7 +208,7 @@ paths:
               birthday:
                 type: "string"
                 description: "Дата рождения пользователя в формате 'гггг-мм-дд'"
-              password:
+              password_hash:
                 type: "string"
                 description: "Пароль пользователя"
       responses:
@@ -246,15 +252,15 @@ paths:
             id: "RegisterAdminRequest"
             required:
               - "name"
-              - "image"
+              - "avatar"
               - "phone"
               - "birthday"
-              - "password"
+              - "password_hash"
             properties:
               name:
                 type: "string"
                 description: "Имя администратора"
-              image:
+              avatar:
                 type: "string"
                 description: "Аватар администратора"
               phone:
@@ -263,7 +269,7 @@ paths:
               birthday:
                 type: "string"
                 description: "Дата рождения администратора в формате 'гггг-мм-дд'"
-              password:
+              password_hash:
                 type: "string"
                 description: "Пароль администратора"
       responses:
@@ -385,7 +391,8 @@ paths:
             properties:
               activity_type:
                 type: string
-                description: Тип активности
+                enum: [ 'RUNNING', 'SWIMMING', 'CYCLING' ]
+                description: "Тип активности"
               date:
                 type: string
                 description: Дата активности

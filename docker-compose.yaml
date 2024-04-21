@@ -5,10 +5,11 @@ services:
     build: .
     command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; flask run --host=0.0.0.0'
     ports:
-      - "8000:8000"
+      - "5000:5000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
+      - - FLASK_APP=app.main
     depends_on:
       - db
 
