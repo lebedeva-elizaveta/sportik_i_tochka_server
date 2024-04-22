@@ -8,6 +8,9 @@ class AdminController(BaseUser):
     model = Admin
     schema = AdminCreate
 
+    def get_role(self):
+        return "admin"
+
     @staticmethod
     def modify_admin_action_endpoint(admin_id, data):
         try:

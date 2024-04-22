@@ -28,7 +28,7 @@ class AuthorizationService:
             "success": True,
             "access_token": UserController(entity_id=user.id).generate_access_token(),
             "user_id": user.id,
-            "role": "admin",
+            "role": role,
         }
 
         schema = LoginResponseSchema()
