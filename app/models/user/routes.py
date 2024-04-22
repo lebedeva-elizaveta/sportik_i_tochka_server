@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
-# from app.exceptions import AlreadyExists
+from app.exceptions import AlreadyExists
 from app.models.user.controller import UserController
 from app.services.security_service import EncryptionService
 
@@ -16,8 +16,8 @@ def register_user():
     register_data = request.json
     try:
         UserController.check_email(email)
-    except Exception as e:
-        return jsonify({"success": False, "error": {e}}), 409
+    except AlreadyExists:
+        return jsonify({"success": False}), 409
     try:
         register_data['password_hash'] = EncryptionService.generate_password_hash(register_data['password_hash'])
         register_data['email'] = email
