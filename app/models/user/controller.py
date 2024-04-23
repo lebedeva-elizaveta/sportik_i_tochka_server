@@ -10,6 +10,9 @@ class UserController(BaseUser):
     model = User
     schema = UserCreate
 
+    def get_role(self):
+        return "user"
+
     @classmethod
     def is_premium(cls, user_id):
         if not isinstance(user_id, int):

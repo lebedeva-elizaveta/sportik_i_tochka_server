@@ -10,3 +10,5 @@ class UserCreate(Schema):
     weight = fields.Integer(required=True)
     avatar = fields.Str()
     is_blocked = fields.Bool()
+
+

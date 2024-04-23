@@ -1,7 +1,5 @@
 from flask import request, jsonify, Blueprint
 from marshmallow import ValidationError
-
-from app.exceptions import AlreadyExists
 from app.models.admin.controller import AdminController
 from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema
 from app.services.security_service import EncryptionService
@@ -18,8 +16,8 @@ def register_admin():
     register_data = request.json
     try:
         AdminController.check_email(email)
-    except AlreadyExists:
-        return jsonify({"success": False}), 409
+    except Exception as e:
+        return jsonify({"success": False, "error": {e}}), 409
     try:
         register_data['password_hash'] = EncryptionService.generate_password_hash(register_data['password_hash'])
         register_data['email'] = email

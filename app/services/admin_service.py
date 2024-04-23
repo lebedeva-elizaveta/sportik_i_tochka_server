@@ -14,19 +14,14 @@ class AdminService:
         user_id = request_data['user_id']
         action = request_data['action']
         user = UserController.get_by_id(user_id)
-
         if not user:
             return {"success": False, "message": "User not found"}, 404
-
         if action == "BLOCK":
             return self._block_user(admin_id, user)
-
         elif action == "UNBLOCK":
             return self._unblock_user(admin_id, user)
-
         elif action == "REVOKE_PREMIUM":
             return self._revoke_premium(admin_id, user)
-
         else:
             return {"success": False, "message": "Invalid action"}, 400
 
