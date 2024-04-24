@@ -3,6 +3,7 @@ from werkzeug.exceptions import NotFound, Unauthorized
 
 from app.models.admin.controller import AdminController
 from app.models.base_controller import BaseUser
+from app.models.common_schemas import ChangeDataSchema
 from app.models.user.controller import UserController
 from app.services.authorization_service import AuthorizationService
 
@@ -61,7 +62,9 @@ def change_current_data():
         if not access_token:
             return jsonify({"success": False, "error": "Authorization header missing"}), 401
         user_data = request.json
-        return BaseUser.change_user_data(access_token, user_data)
+        schema = ChangeDataSchema()
+        validated_data = schema.load(user_data)
+        return BaseUser.change_user_data(access_token, validated_data)
     except Unauthorized as ue:
         return jsonify({"success": False, "error": str(ue)}), 401
     except NotFound as nf:
