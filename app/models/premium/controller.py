@@ -39,13 +39,16 @@ class PremiumController:
 
     @staticmethod
     def cancel_premium(user_id):
-        premium = Premium.query.filter(
-            Premium.user_id == user_id,
-            Premium.start_date <= datetime.utcnow(),
-            Premium.end_date >= datetime.utcnow()
-        ).order_by(
-            Premium.start_date.desc(), Premium.end_date.desc()
-        ).first()
-        premium.end_date = datetime.utcnow()
-        db.session.commit()
-        return jsonify({"success": True}), 200
+        try:
+            premium = Premium.query.filter(
+                Premium.user_id == user_id,
+                Premium.start_date <= datetime.utcnow(),
+                Premium.end_date >= datetime.utcnow()
+            ).order_by(
+                Premium.start_date.desc(), Premium.end_date.desc()
+            ).first()
+            premium.end_date = datetime.utcnow()
+            db.session.commit()
+            return jsonify({"success": True}), 200
+        except Exception as e:
+            return {"success": False, "error": str(e)}, 500
