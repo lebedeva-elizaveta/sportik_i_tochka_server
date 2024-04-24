@@ -28,3 +28,20 @@ def buy_premium():
     except Exception as e:
         return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
 
+
+@api_premium_bp.route('/cancel_premium', methods=['PUT'])
+def cancel_premium():
+    """
+    Отменить премиум
+    """
+    try:
+        access_token = request.headers.get('Authorization')
+        user_id = UserController.get_id_from_access_token(access_token)
+        if not user_id:
+            return jsonify({"success": False}), 401
+        user = UserController.get_by_id(user_id)
+        if not user:
+            return jsonify({"success": False}), 404
+        return PremiumController.cancel_premium(user_id)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
