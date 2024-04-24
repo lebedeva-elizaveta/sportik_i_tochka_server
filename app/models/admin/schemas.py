@@ -17,3 +17,8 @@ class AdminGrantPremiumSchema(Schema):
 class AdminActionModifySchema(Schema):
     user_id = fields.Int(required=True)
     action = fields.Str(required=True, validate=lambda x: x.upper() in ["BLOCK", "UNBLOCK", "REVOKE_PREMIUM"])
+
+
+class AdminProfileSchema(Schema):
+    name = fields.String(required=True)
+    image = fields.String(required=False)

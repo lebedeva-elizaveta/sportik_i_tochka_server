@@ -935,6 +935,46 @@ paths:
               message:
                 type: string
                 description: Сообщение о том, что не найдено
+  /get_admin_profile:
+    get:
+      tags:
+        - "Администраторы"
+      summary: "Получить профиль администратора"
+      description: "Возвращает данные для профиля администратора"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: AdminProfileResponse
+            properties:
+              name:
+                type: string
+                description: Имя админа
+              image:
+                type: string
+                description: Фото админа
+        401:
+          description: Токен некорректный
+          schema:
+            id: TokenErrorResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
+        404:
+          description: Ошибка, если администратор не найден
+          schema:
+            id: NotFoundResponse
+            properties:
+              success:
+                type: boolean
+                description: Результат запроса
   /get_rating:
     get:
       tags:

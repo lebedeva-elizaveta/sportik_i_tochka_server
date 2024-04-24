@@ -1,5 +1,7 @@
+from flask import jsonify
+
 from app.models.admin.model import Admin
-from app.models.admin.schemas import AdminCreate
+from app.models.admin.schemas import AdminCreate, AdminProfileSchema
 from app.models.base_controller import BaseUser
 from app.services.admin_service import AdminService
 
@@ -28,3 +30,13 @@ class AdminController(BaseUser):
             return result, status
         except Exception as e:
             return {"success": False, "error": f"An unexpected error occurred: {e}"}, 500
+
+    @classmethod
+    def get_profile_data(cls, access_token):
+        admin_id = cls.get_id_from_access_token(access_token)
+        admin = cls.get_by_id(admin_id)
+        response_data = {
+            "name": admin.name,
+            "image": admin.avatar,
+        }
+        return jsonify(AdminProfileSchema().dump(response_data)), 200

@@ -76,3 +76,17 @@ def admin_actions_post():
         return jsonify({"success": False, "errors": ve.messages}), 400
     except Exception as e:
         return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+
+
+@api_admin_bp.route('/get_admin_profile', methods=['GET'])
+def get_user_profile():
+    """
+    Профиль администратора
+    """
+    try:
+        access_token = request.headers.get("Authorization")
+        if not access_token:
+            return jsonify({"success": False, "error": "Authorization header missing"}), 401
+        return AdminController.get_profile_data(access_token)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
