@@ -34,3 +34,17 @@ def register_user():
     else:
         return jsonify({"success": False, "message": "Failed to create user"}), 500
 
+
+@api_user_bp.route('/get_user_profile', methods=['GET'])
+def get_user_profile():
+    """
+    Профиль пользователя
+    """
+    try:
+        access_token = request.headers.get("Authorization")
+        if not access_token:
+            return jsonify({"success": False, "error": "Authorization header missing"}), 401
+        period = request.args.get('period')
+        return UserController.get_profile_data(access_token, period)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500

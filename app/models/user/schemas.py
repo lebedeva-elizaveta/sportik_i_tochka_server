@@ -12,3 +12,14 @@ class UserCreate(Schema):
     is_blocked = fields.Bool()
 
 
+class UserStatisticsSchema(Schema):
+    total_distance_in_meters = fields.Float(required=True)
+    total_time = fields.Float(required=True)
+    total_calories = fields.Float(required=True)
+
+
+class UserProfileSchema(Schema):
+    name = fields.String(required=True)
+    image = fields.String(required=False)
+    statistics = fields.Dict(required=True)
+    achievements = fields.List(fields.Dict(), required=True)
