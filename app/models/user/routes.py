@@ -48,3 +48,18 @@ def get_user_profile():
         return UserController.get_profile_data(access_token, period)
     except Exception as e:
         return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+
+
+@api_user_bp.route('/get_rating', methods=['GET'])
+def get_rating():
+    """
+    Получить рейтинг пользователей
+    """
+    try:
+        access_token = request.headers.get("Authorization")
+        if not access_token:
+            return jsonify({"success": False, "error": "Authorization header missing"}), 401
+        return jsonify({"users": UserController.get_rating()}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+

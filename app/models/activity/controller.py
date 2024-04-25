@@ -28,6 +28,4 @@ class ActivityController:
     @classmethod
     def get_by_user_id(cls, user_id):
         user_activities = db.session.query(cls.model).filter(cls.model.user_id == user_id).all()
-        if not user_activities:
-            raise NotFound("Activity not found")
         return user_activities

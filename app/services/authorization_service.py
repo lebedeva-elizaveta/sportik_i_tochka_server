@@ -23,7 +23,7 @@ class AuthorizationService:
             return {"success": False, "error": "USER_BLOCKED"}, 403
         if not UserController.check_password(user.password_hash, password):
             return {"success": False, "error": "INCORRECT_PASSWORD"}, 401
-        role = "premium" if UserController.is_premium(user.id) else "regular"
+        role = UserController.premium_or_regular(user.id)
         result = {
             "success": True,
             "access_token": UserController(entity_id=user.id).generate_access_token(),

@@ -1,4 +1,6 @@
 from datetime import datetime
+from operator import itemgetter
+
 from flask import jsonify
 from app.models.achievement.controller import AchievementController
 from app.models.achievement.schemas import AchievementSchema
@@ -7,6 +9,7 @@ from app.models.user.model import User
 from app.models.user.schemas import UserCreate, UserProfileSchema
 from app.models.premium.model import Premium
 from app.services.statistics_service import StatisticsService
+from app.services.user_service import UserService
 
 
 class UserController(BaseUser):
@@ -17,14 +20,16 @@ class UserController(BaseUser):
         return "user"
 
     @classmethod
-    def is_premium(cls, user_id):
+    def premium_or_regular(cls, user_id):
         if not isinstance(user_id, int):
             raise ValueError("user_id must be an integer")
         current_datetime = datetime.utcnow()
         active_premium = Premium.query.filter_by(user_id=user_id).filter(
             Premium.end_date > current_datetime
         ).first()
-        return active_premium is not None
+        if active_premium:
+            return "premium"
+        return "regular"
 
     @classmethod
     def get_profile_data(cls, access_token, period):
@@ -39,3 +44,12 @@ class UserController(BaseUser):
             "achievements": AchievementSchema(many=True).dump(achievements)
         }
         return jsonify(UserProfileSchema().dump(response_data)), 200
+
+    @classmethod
+    def get_rating(cls):
+        users = User.query.all()
+        list_of_users = []
+        for user in users:
+            role = UserController.premium_or_regular(user.id)
+            list_of_users.append(UserService.get_user_data_for_rating(user, role))
+        return sorted(filter(None, list_of_users), key=itemgetter('rating'))

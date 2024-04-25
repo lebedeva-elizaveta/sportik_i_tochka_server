@@ -24,6 +24,4 @@ class AchievementController:
     @classmethod
     def get_by_user_id(cls, user_id):
         user_achievements = db.session.query(cls.model).filter(cls.model.user_id == user_id).all()
-        if not user_achievements:
-            raise None
         return user_achievements
