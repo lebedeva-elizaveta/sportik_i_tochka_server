@@ -4,6 +4,7 @@ from sqlalchemy import func
 
 from app.database import db
 from app.models.achievement.controller import AchievementController
+from app.models.achievement.schemas import AchievementListSchema
 from app.models.activity.controller import ActivityController
 from app.models.activity.model import Activity
 from app.models.user.schemas import UserDataForRatingSchema
@@ -30,11 +31,6 @@ class UserService:
     @staticmethod
     def get_user_data_for_rating(user, role):
         user_achievements = AchievementController.get_by_user_id(user.id)
-        list_of_achievements = [
-            {"id": a.id, "name": a.name, "image": a.image, "distance": a.distance}
-            for a in user_achievements
-        ]
-
         total_activities_count = len(ActivityController.get_by_user_id(user.id))
         statistics = StatisticsService.user_statistics_count(user.id, "all_time")
         average_statistics = StatisticsService.user_average_statistics(user.id, total_activities_count)
@@ -53,7 +49,7 @@ class UserService:
             "average_distance_in_meters": average_statistics.get("average_distance_in_meters"),
             "average_time": average_statistics.get("average_time"),
             "average_calories": average_statistics.get("average_calories"),
-            "achievements": list_of_achievements,
+            "achievements": AchievementListSchema().dump({"achievements": user_achievements}).get("achievements"),
         }
 
         return UserDataForRatingSchema().dump(user_data)

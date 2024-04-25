@@ -50,8 +50,7 @@ def get_activities():
         if not user_activities:
             return jsonify({"success": True, "message": "No activities yet"}), 200
         try:
-            activity_list_schema = ActivityListSchema()
-            serialized_activities = activity_list_schema.dump({"activities": user_activities})
+            serialized_activities = ActivityListSchema().dump({"activities": user_activities})
         except Exception as e:
             return jsonify({"success": False, "error": f"Serialization error: {e}"}), 500
         return jsonify({"success": True, "activities": serialized_activities['activities']}), 200

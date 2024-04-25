@@ -1,5 +1,8 @@
 from marshmallow import Schema, fields, validate
 
+from app.models.achievement.schemas import AchievementSchema
+from app.models.activity.schemas import ActivitySchema
+
 
 class UserCreate(Schema):
     email = fields.Email(required=True, validate=validate.Length(max=255))
@@ -22,7 +25,7 @@ class UserProfileSchema(Schema):
     name = fields.String(required=True)
     image = fields.String(required=False)
     statistics = fields.Dict(required=True)
-    achievements = fields.List(fields.Dict(), required=True)
+    achievements = fields.List(fields.Nested(AchievementSchema()))
 
 
 class UserAverageStatisticsSchema(Schema):
@@ -46,4 +49,9 @@ class UserDataForRatingSchema(Schema):
     average_distance_in_meters = fields.Float(required=True)
     average_time = fields.Float(required=True)
     average_calories = fields.Float(required=True)
-    achievements = fields.List(fields.Dict, required=True)
+    achievements = fields.List(fields.Nested(AchievementSchema()))
+
+
+class PremiumStatisticsSchema(UserStatisticsSchema):
+    avg_speed = fields.Float(required=True)
+    activities = fields.List(fields.Nested(ActivitySchema()))

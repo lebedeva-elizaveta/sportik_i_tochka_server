@@ -90,3 +90,19 @@ def get_user_profile():
         return AdminController.get_profile_data(access_token)
     except Exception as e:
         return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+
+
+@api_admin_bp.route('/admin_route_statistics', methods=['GET'])
+def admin_route_statistics():
+    """
+    Получить статистику админа
+    """
+    try:
+        access_token = request.headers.get("Authorization")
+        if not access_token:
+            return jsonify({"success": False, "error": "Authorization header missing"}), 401
+        period = request.args.get('period')
+        response, status_code = AdminController.get_admin_statistics(access_token, period)
+        return response, status_code
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500

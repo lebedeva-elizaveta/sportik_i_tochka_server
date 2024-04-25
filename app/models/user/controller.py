@@ -1,9 +1,8 @@
 from datetime import datetime
 from operator import itemgetter
-
 from flask import jsonify
 from app.models.achievement.controller import AchievementController
-from app.models.achievement.schemas import AchievementSchema
+from app.models.achievement.schemas import AchievementListSchema
 from app.models.base_controller import BaseUser
 from app.models.user.model import User
 from app.models.user.schemas import UserCreate, UserProfileSchema
@@ -41,7 +40,7 @@ class UserController(BaseUser):
             "name": user.name,
             "image": user.avatar,
             "statistics": statistics,
-            "achievements": AchievementSchema(many=True).dump(achievements)
+            "achievements": AchievementListSchema().dump({"achievements": achievements}).get("achievements")
         }
         return jsonify(UserProfileSchema().dump(response_data)), 200
 
@@ -53,3 +52,11 @@ class UserController(BaseUser):
             role = UserController.premium_or_regular(user.id)
             list_of_users.append(UserService.get_user_data_for_rating(user, role))
         return sorted(filter(None, list_of_users), key=itemgetter('rating'))
+
+    @classmethod
+    def get_premium_statistics(cls, access_token, period):
+        user_id = cls.get_id_from_access_token(access_token)
+
+        if cls.premium_or_regular(user_id) != "premium":
+            return {"success": False, "message": "User is not premium"}, 403
+        return StatisticsService.premium_statistics_count(user_id, period)

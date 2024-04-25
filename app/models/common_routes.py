@@ -25,7 +25,7 @@ def login():
     try:
         user = UserController.get_by_email(email)
         if user.is_blocked:
-            return jsonify({"success": False, "error": "USER_IS_BLOCKED"}), 404
+            return jsonify({"success": False, "error": "USER_IS_BLOCKED"}), 403
         return AuthorizationService.handle_user_login(user, password)
     except NotFound:
         pass
