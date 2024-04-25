@@ -5,6 +5,22 @@ info:
   version: "1.0"
 components:
   schemas:
+    graph_data:
+      type: object
+      required:
+        - date
+        - users_with_premium
+        - users_without_premium
+      properties:
+        date:
+          type: string
+          description: Дата активности в формате "гггг-мм-дд"
+        users_with_premium:
+          type: integer
+          description: Количество премиум-пользователей
+        users_without_premium:
+          type: integer
+          description: Количество обычных пользователей
     ActivityType:
       type: string
       enum:

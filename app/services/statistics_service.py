@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 from marshmallow import ValidationError
 from app.models.activity.controller import ActivityController
+from app.models.admin.schemas import AdminStatisticsSchema
+from app.models.premium.model import Premium
+from app.models.user.model import User
 from app.models.user.schemas import UserStatisticsSchema, UserAverageStatisticsSchema, PremiumStatisticsSchema
 
 
@@ -102,3 +105,40 @@ class StatisticsService:
         }
 
         return PremiumStatisticsSchema().dump(premium_statistics_response), 200
+
+    @staticmethod
+    def admin_statistics_count(period):
+        start_date = StatisticsService._get_start_date(period)
+        if start_date is None:
+            first_user_registration = User.query.order_by(User.date_of_registration).first()
+            start_date = first_user_registration.date_of_registration if first_user_registration else datetime.now()
+        end_date = datetime.now()
+
+        total_users = User.query.count()
+        graph_data = []
+        current_date = start_date
+
+        while current_date <= end_date:
+            premium_users_count = Premium.query.filter(
+                Premium.start_date <= current_date,
+                Premium.end_date >= current_date
+            ).count()
+
+            registered_users_count = User.query.filter(User.date_of_registration <= current_date).count()
+            non_premium_users_count = registered_users_count - premium_users_count
+
+            graph_data.append({
+                'date': current_date.strftime('%Y-%m-%d'),
+                'users_with_premium': premium_users_count,
+                'users_without_premium': non_premium_users_count
+            })
+
+            current_date += timedelta(days=1)
+
+        admin_statistics_response = {
+            'total_users': total_users,
+            'premium_users': Premium.query.filter(Premium.end_date >= datetime.now()).count(),
+            'graph_data': graph_data
+        }
+
+        return AdminStatisticsSchema().dump(admin_statistics_response), 200

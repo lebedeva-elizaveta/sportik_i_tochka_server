@@ -4,6 +4,7 @@ from app.models.admin.model import Admin
 from app.models.admin.schemas import AdminCreate, AdminProfileSchema
 from app.models.base_controller import BaseUser
 from app.services.admin_service import AdminService
+from app.services.statistics_service import StatisticsService
 
 
 class AdminController(BaseUser):
@@ -40,3 +41,13 @@ class AdminController(BaseUser):
             "image": admin.avatar,
         }
         return jsonify(AdminProfileSchema().dump(response_data)), 200
+
+    @classmethod
+    def get_admin_statistics(cls, access_token, period):
+        try:
+            if BaseUser.get_role_from_access_token(access_token) != "admin":
+                # TODO exception
+                raise "RoleError"
+            return StatisticsService.admin_statistics_count(period)
+        except Exception as e:
+            return {"success": False, "error": f"An unexpected error occurred: {e}"}, 500

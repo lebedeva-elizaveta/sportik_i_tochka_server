@@ -13,10 +13,7 @@ def register_user():
     """
     email = request.headers.get('email')
     register_data = request.json
-    try:
-        UserController.check_email(email)
-    except Exception as e:
-        return jsonify({"success": False, "error": {e}}), 409
+    UserController.check_email(email)
     try:
         register_data['password_hash'] = EncryptionService.generate_password_hash(register_data['password_hash'])
         register_data['email'] = email
@@ -66,6 +63,9 @@ def get_rating():
 
 @api_user_bp.route('/premium_statistics', methods=['GET'])
 def premium_statistics():
+    """
+    Получить премиум-статистику
+    """
     try:
         access_token = request.headers.get("Authorization")
         if not access_token:
