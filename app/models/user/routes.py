@@ -63,3 +63,15 @@ def get_rating():
     except Exception as e:
         return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
 
+
+@api_user_bp.route('/premium_statistics', methods=['GET'])
+def premium_statistics():
+    try:
+        access_token = request.headers.get("Authorization")
+        if not access_token:
+            return jsonify({"success": False, "error": "Authorization header missing"}), 401
+        period = request.args.get('period')
+        response, status_code = UserController.get_premium_statistics(access_token, period)
+        return response, status_code
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500

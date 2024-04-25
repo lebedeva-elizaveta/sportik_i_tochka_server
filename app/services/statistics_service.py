@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
-
 from marshmallow import ValidationError
-
 from app.models.activity.controller import ActivityController
-from app.models.user.schemas import UserStatisticsSchema, UserAverageStatisticsSchema
+from app.models.user.schemas import UserStatisticsSchema, UserAverageStatisticsSchema, PremiumStatisticsSchema
 
 
 class StatisticsService:
@@ -15,7 +13,7 @@ class StatisticsService:
             'year': 365,
         }
         if period_time in period_dict:
-            return (datetime.now() - timedelta(days=period_dict[period_time])).strftime('%Y-%m-%d')
+            return datetime.now() - timedelta(days=period_dict[period_time])
         elif period_time == 'all_time':
             return None
         else:
@@ -34,7 +32,10 @@ class StatisticsService:
         start_date = StatisticsService._get_start_date(period_time)
 
         if start_date:
-            activities = [activity for activity in user_activities if activity.date >= start_date]
+            activities = [
+                activity for activity in user_activities
+                if activity.date >= start_date.date()
+            ]
         else:
             activities = user_activities
         total_distance = sum(activity.distance_in_meters for activity in activities)
@@ -80,3 +81,24 @@ class StatisticsService:
         except ValidationError as e:
             return {"error": f"Data validation error: {e}"}
         return validated_data
+
+    @staticmethod
+    def premium_statistics_count(user_id, period):
+        statistics = StatisticsService.user_statistics_count(user_id, period)
+        if not statistics:
+            return {"success": False, "message": "Statistics not found"}, 404
+
+        total_distance_in_meters = statistics['total_distance_in_meters']
+        total_time = statistics['total_time']
+        total_calories = statistics['total_calories']
+        avg_speed = round(total_distance_in_meters / total_time, 2)
+
+        premium_statistics_response = {
+            "total_distance_in_meters": total_distance_in_meters,
+            "total_time": total_time,
+            "total_calories": total_calories,
+            "avg_speed": avg_speed,
+            "activities": ActivityController.get_by_user_id(user_id)
+        }
+
+        return PremiumStatisticsSchema().dump(premium_statistics_response), 200

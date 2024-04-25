@@ -7,3 +7,7 @@ class AchievementSchema(Schema):
     image = fields.String(required=True)
     distance = fields.Float(required=True)
     user_id = fields.Integer(load_only=True)
+
+
+class AchievementListSchema(Schema):
+    achievements = fields.List(fields.Nested(AchievementSchema()))
