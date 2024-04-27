@@ -1,14 +1,19 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
+
+
+class LoginRequestSchema(Schema):
+    email = fields.Email(required=True, validate=validate.Length(max=255))
+    password = fields.Str(required=True, validate=validate.Length(max=255))
 
 
 class LoginResponseSchema(Schema):
     access_token = fields.String(required=True)
     role = fields.String(required=True)
     success = fields.Boolean(required=True)
-    user_id = fields.Integer(required=True)
+    entity_id = fields.Integer(required=True)
 
 
-class UserDataSchema(Schema):
+class EntityDataSchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     image = fields.String(required=True)

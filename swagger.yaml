@@ -5,6 +5,51 @@ info:
   version: "1.0"
 components:
   schemas:
+    NotFoundException:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: "Результат операции"
+        error:
+          type: string
+          description: "Сообщение о том, кто или что не найдено"
+    Unauthorized:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: "Результат операции"
+        error:
+          type: string
+          description: "Сообщение об ошибке"
+    BadRequest:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: "Результат операции"
+        error:
+          type: string
+          description: "Сообщение об ошибке"
+        details:
+          type: string
+          description: "Конкретное описание ошибок"
+    Conflict:
+      type: object
+      properties:
+        free:
+          type: boolean
+          description: "Проверка доступности email"
+    InvalidRoleException:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: "Результат операции"
+        error:
+          type: string
+          description: "Описание ошибки"
     graph_data:
       type: object
       required:
@@ -183,13 +228,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AchievementResponse'
-
 paths:
-  /register_user:
+  /user/register:
     post:
       tags:
-        - "Пользователи"
-      summary: "Создать новый аккаунт"
+        - "Регистрация"
+      summary: "Создать новый аккаунт пользователя"
       parameters:
         - name: "email"
           in: "header"
@@ -242,18 +286,20 @@ paths:
               user_id:
                 type: "integer"
                 description: "ID пользователя"
+        '400':
+          description: "Ошибка введенных данных"
+          schema:
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         '409':
           description: "Ошибка, если email уже используется"
           schema:
-            id: "EmailIsUnavailable"
-            properties:
-              free:
-                type: "boolean"
-                description: "Проверка доступности email"
-  /register_admin:
+            type: object
+            $ref: '#/components/schemas/Conflict'
+  /admin/register:
     post:
       tags:
-        - "Администраторы"
+        - "Регистрация"
       summary: "Создать новый аккаунт администратора"
       parameters:
         - name: "email"
@@ -303,18 +349,20 @@ paths:
               admin_id:
                 type: "integer"
                 description: "ID администратора"
+        '400':
+          description: "Ошибка введенных данных"
+          schema:
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         '409':
           description: "Ошибка, если email уже используется"
           schema:
-            id: "EmailIsUnavailable"
-            properties:
-              free:
-                type: "boolean"
-                description: "Проверка доступности email"
+            type: object
+            $ref: '#/components/schemas/Conflict'
   /login:
     post:
       tags:
-        - "Пользователи"
+        - "Вход в аккаунт"
       summary: "Войти в аккаунт"
       parameters:
         - name: "login_data"
@@ -347,43 +395,30 @@ paths:
               role:
                 type: "string"
                 description: "Роль пользователя"
+        '400':
+          description: "Ошибка введенных данных"
+          schema:
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         '401':
           description: "Неправильный пароль"
           schema:
-            id: "IncorrectPasswordResponse"
-            properties:
-              success:
-                type: "boolean"
-                description: "Результат входа"
-              error:
-                type: "string"
-                description: "Ошибка"
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         '403':
           description: "Пользователь заблокирован"
           schema:
-            id: "UserIsBlockedResponse"
-            properties:
-              success:
-                type: "boolean"
-                description: "Результат входа"
-              error:
-                type: "string"
-                description: "Ошибка"
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         '404':
           description: "Пользователь не найден"
           schema:
-            id: "UserNotFoundResponse"
-            properties:
-              success:
-                type: "boolean"
-                description: "Результат входа"
-              error:
-                type: "string"
-                description: "Ошибка"
-  /add_activity:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /activities:
     post:
       tags:
-        - "Активности"
+        - "Взаимодействие с активностями"
       summary: "Добавить активность"
       parameters:
         - name: Authorization
@@ -440,27 +475,29 @@ paths:
               activity_id:
                 type: integer
                 description: ID активности
+        400:
+          description: "Ошибка введенных данных"
+          schema:
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат добавления активности
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Ошибка, если пользователь не найден
           schema:
-            id: UserNotFoundResponse
-            properties:
-              free:
-                type: boolean
-                description: Результат добавления активности
-
-  /get_activities:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
     get:
       tags:
-        - Активности
+        - "Взаимодействие с активностями"
       summary: Получить список активностей
       description: Возвращает список всех активностей пользователя.
       parameters:
@@ -470,7 +507,7 @@ paths:
           type: string
           description: Токен доступа пользователя
       responses:
-        201:
+        200:
           description: Успешный запрос
           schema:
             id: ActivityResponse
@@ -482,34 +519,68 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ActivityResponse'
-            examples:
+          examples:
             NoActivities:
               description: Нет активностей
               value:
                 success: true
                 message: No activities yet
+            SingleActivity:
+              summary: Пример одной активности
+              value:
+                id: 1
+                activity_type: "running"
+                image: "/images/running_map.png"
+                date: "2024-05-01"
+                avg_speed: 5.5
+                distance_in_meters: 10000
+                duration: 3600
+                calories_burned: 500
+              MultipleActivities:
+                summary: Пример нескольких активностей
+                value:
+                  - id: 1
+                    activity_type: "cycling"
+                    image: "/images/cycling_map.png"
+                    date: "2024-05-02"
+                    avg_speed: 15.0
+                    distance_in_meters: 20000
+                    duration: 7200
+                    calories_burned: 1000
+                  - id: 2
+                    activity_type: "swimming"
+                    image: "/images/swimming_map.png"
+                    date: "2024-05-03"
+                    avg_speed: 2.0
+                    distance_in_meters: 1000
+                    duration: 1200
+                    calories_burned: 300
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат отображения активностей
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
+          examples:
+            invalid_role:
+              summary: Пример ошибки доступа
+              value:
+                success: false
+                error: "Недостаточно прав для доступа"
         404:
           description: Ошибка, если пользователь не найден
           schema:
-            id: UserNotFoundResponse
-            properties:
-              free:
-                type: boolean
-                description: Результат отображения активностей
-
-  /admin_actions/modify:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /admin/action:
     put:
       tags:
-        - "Администраторы"
-      summary: "Модификация статуса пользователя"
+        - "Взаимодействие администраторов с пользователями"
+      summary: "Заблокировать, разблокировать, забрать премиум"
       parameters:
         - name: Authorization
           in: header
@@ -542,41 +613,34 @@ paths:
                 type: string
                 description: Выполненное действие
         400:
-          description: Некорректное действие или запрос
+          description: "Ошибка введенных данных"
           schema:
-            id: InvalidModifyActionErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение об ошибке
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Пользователь или администратор не найдены
           schema:
-            id: NotFoundErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение о том, кто не найден
-
-  /admin_actions/grant_premium:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+        409:
+          description: Действие недоступно
+          schema:
+            type: object
+            $ref: '#/components/schemas/Conflict'
     post:
       tags:
-        - "Администраторы"
-      summary: "Выдача премиума пользователю"
+        - "Взаимодействие администраторов с пользователями"
+      summary: "Выдать премиум-подписку"
       parameters:
         - name: Authorization
           in: header
@@ -604,40 +668,30 @@ paths:
               action:
                 type: string
                 description: Выполненное действие
-        400:
-          description: Некорректное действие или запрос
-          schema:
-            id: InvalidGrantPremiumErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение об ошибке
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Пользователь или администратор не найдены
           schema:
-            id: NotFoundErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение о том, кто не найден
-  /buy_premium:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+        409:
+          description: Действие недоступно
+          schema:
+            type: object
+            $ref: '#/components/schemas/Conflict'
+  /premium:
     post:
       tags:
-        - "Премиум"
+        - "Взаимодействие с премиум-подпиской"
       summary: "Покупка премиума пользователем"
       parameters:
         - name: Authorization
@@ -679,40 +733,29 @@ paths:
                 type: string
                 description: Дата начала премиум подписки
         400:
-          description: Некорректные данные карты
+          description: "Ошибка введенных данных"
           schema:
-            id: InvalidCardDataResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение о некорректных данных
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Пользователь не найден
           schema:
-            id: NotFoundErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат действия
-              message:
-                type: string
-                description: Сообщение о том кто не найден
-  /get_current_data:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /data:
     get:
       tags:
-        - "Пользователи"
-        - "Администраторы"
+        - "Личные данные"
       summary: "Получить личные данные"
       description: "Возвращает личные данные"
       parameters:
@@ -749,35 +792,21 @@ paths:
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         404:
           description: Ошибка, если пользователь не найден
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-              message:
-                type: string
-                description: Сообщение о том, что не найдено
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
         403:
-          description: Ошибка, если роль некорректная
+          description: Доступ запрещен (Forbidden)
           schema:
-            id: RoleNotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-  /change_current_data:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
     put:
       tags:
-        - "Пользователи"
-        - "Администраторы"
+        - "Личные данные"
       summary: "Изменить личные данные"
       description: "Изменяет личные данные"
       parameters:
@@ -817,37 +846,30 @@ paths:
               success:
                 type: boolean
                 description: Результат запроса
+        400:
+          description: "Ошибка введенных данных"
+          schema:
+            type: object
+            $ref: '#/components/schemas/BadRequest'
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         404:
           description: Ошибка, если пользователь не найден
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-              message:
-                type: string
-                description: Сообщение о том, что не найдено
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
         403:
-          description: Ошибка, если роль некорректная
+          description: Доступ запрещен (Forbidden)
           schema:
-            id: RoleNotFoundResponse
-            properties:
-              free:
-                type: boolean
-                description: Результат запроса
-  /cancel_premium:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
+  /premium/cancel:
     put:
       tags:
-        - "Премиум"
+        - "Взаимодействие с премиум-подпиской"
       summary: "Отменить премиум-подписку"
       description: "Отменяет премиум-подписку"
       parameters:
@@ -869,26 +891,17 @@ paths:
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         404:
           description: Ошибка, если пользователь не найден
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-              message:
-                type: string
-                description: Сообщение о том, что не найдено
-  /get_user_profile:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /user/profile:
     get:
       tags:
-        - "Пользователи"
+        - "Личный профиль"
       summary: "Получить профиль пользователя"
       description: "Возвращает данные для профиля пользователя"
       parameters:
@@ -935,26 +948,22 @@ paths:
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Ошибка, если пользователь или статистика не найдены
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-              message:
-                type: string
-                description: Сообщение о том, что не найдено
-  /get_admin_profile:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /admin/profile:
     get:
       tags:
-        - "Администраторы"
+        - "Личный профиль"
       summary: "Получить профиль администратора"
       description: "Возвращает данные для профиля администратора"
       parameters:
@@ -978,23 +987,22 @@ paths:
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Ошибка, если администратор не найден
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-  /get_rating:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /rating:
     get:
       tags:
-        - "Пользователи"
+        - "Рейтинг"
       summary: "Получить рейтинг пользователей"
       description: "Возвращает данные для рейтинга пользователей"
       parameters:
@@ -1016,26 +1024,17 @@ paths:
         401:
           description: "Токен некорректный"
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: "Результат запроса"
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         404:
           description: "Ошибка, если пользователь или статистика не найдены"
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: "Результат запроса"
-              message:
-                type: string
-                description: "Сообщение о том, что не найдено"
-  /premium_statistics:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /user/premium/statistics:
     get:
       tags:
-        - "Премиум"
+        - "Статистика"
       summary: "Получить статистику для премиум-пользователя"
       description: "Возвращает данные для премиум-статистики"
       parameters:
@@ -1076,34 +1075,22 @@ paths:
         401:
           description: "Токен некорректный"
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: "Результат запроса"
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
         403:
-          description: "Ошибка, если пользователь не премиум"
+          description: Доступ запрещен (Forbidden)
           schema:
-            id: RoleNotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: "Результат запроса"
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: "Ошибка, если пользователь или статистика не найдены"
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: "Результат запроса"
-              message:
-                type: string
-                description: "Сообщение о том, что не найдено"
-  /admin_route_statistics:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /admin/statistics:
     get:
       tags:
-        - "Администраторы"
+        - "Статистика"
       summary: "Получить статистику для администраторов"
       description: "Возвращает данные для статистики администратора"
       parameters:
@@ -1137,20 +1124,15 @@ paths:
         401:
           description: Токен некорректный
           schema:
-            id: TokenErrorResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
         404:
           description: Ошибка, если пользователь или статистика не найдены
           schema:
-            id: NotFoundResponse
-            properties:
-              success:
-                type: boolean
-                description: Результат запроса
-              message:
-                type: string
-                description: Сообщение о том, что не найдено
-
+            type: object
+            $ref: '#/components/schemas/NotFoundException'

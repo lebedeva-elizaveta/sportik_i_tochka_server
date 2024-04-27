@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
-from marshmallow import ValidationError
+
+from app.exceptions.exceptions import NotFoundException
 from app.models.activity.controller import ActivityController
-from app.models.admin.schemas import AdminStatisticsSchema
 from app.models.premium.model import Premium
 from app.models.user.model import User
-from app.models.user.schemas import UserStatisticsSchema, UserAverageStatisticsSchema, PremiumStatisticsSchema
 
 
 class StatisticsService:
@@ -20,7 +19,7 @@ class StatisticsService:
         elif period_time == 'all_time':
             return None
         else:
-            raise ValueError(f"Unknown period time: {period_time}")
+            raise ValueError
 
     @staticmethod
     def user_statistics_count(user_id, period_time):
@@ -41,15 +40,18 @@ class StatisticsService:
             ]
         else:
             activities = user_activities
+
         total_distance = sum(activity.distance_in_meters for activity in activities)
         total_time = sum(activity.duration for activity in activities)
         total_calories = sum(activity.calories_burned for activity in activities)
-        data = {
+
+        response = {
             'total_distance_in_meters': total_distance,
             'total_time': total_time,
             'total_calories': total_calories,
         }
-        return UserStatisticsSchema().load(data)
+
+        return response
 
     @staticmethod
     def user_average_statistics(user_id, total_activities_count):
@@ -72,31 +74,27 @@ class StatisticsService:
         average_time = round(total_time / total_activities_count)
         average_calories = round(total_calories / total_activities_count)
 
-        data = {
+        response = {
             "avg_speed": avg_speed,
             "average_distance_in_meters": average_distance,
             "average_time": average_time,
             "average_calories": average_calories,
         }
 
-        try:
-            validated_data = UserAverageStatisticsSchema().load(data)
-        except ValidationError as e:
-            return {"error": f"Data validation error: {e}"}
-        return validated_data
+        return response
 
     @staticmethod
     def premium_statistics_count(user_id, period):
         statistics = StatisticsService.user_statistics_count(user_id, period)
         if not statistics:
-            return {"success": False, "message": "Statistics not found"}, 404
+            raise NotFoundException("Statistics not found")
 
         total_distance_in_meters = statistics['total_distance_in_meters']
         total_time = statistics['total_time']
         total_calories = statistics['total_calories']
         avg_speed = round(total_distance_in_meters / total_time, 2)
 
-        premium_statistics_response = {
+        response = {
             "total_distance_in_meters": total_distance_in_meters,
             "total_time": total_time,
             "total_calories": total_calories,
@@ -104,14 +102,14 @@ class StatisticsService:
             "activities": ActivityController.get_by_user_id(user_id)
         }
 
-        return PremiumStatisticsSchema().dump(premium_statistics_response), 200
+        return response
 
     @staticmethod
     def admin_statistics_count(period):
         start_date = StatisticsService._get_start_date(period)
         if start_date is None:
             first_user_registration = User.query.order_by(User.date_of_registration).first()
-            start_date = first_user_registration.date_of_registration if first_user_registration else datetime.now()
+            start_date = first_user_registration.date_of_registration
         end_date = datetime.now()
 
         total_users = User.query.count()
@@ -135,10 +133,10 @@ class StatisticsService:
 
             current_date += timedelta(days=1)
 
-        admin_statistics_response = {
+        response = {
             'total_users': total_users,
             'premium_users': Premium.query.filter(Premium.end_date >= datetime.now()).count(),
             'graph_data': graph_data
         }
 
-        return AdminStatisticsSchema().dump(admin_statistics_response), 200
+        return response

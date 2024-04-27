@@ -1,13 +1,12 @@
-from flask import jsonify
-
 from app.models.admin.model import Admin
-from app.models.admin.schemas import AdminCreate, AdminProfileSchema
-from app.models.base_controller import BaseUser
+from app.models.admin.schemas import AdminCreate
+from app.models.base_controller import BaseController
 from app.services.admin_service import AdminService
+from app.services.security_service import EncryptionService
 from app.services.statistics_service import StatisticsService
 
 
-class AdminController(BaseUser):
+class AdminController(BaseController):
     model = Admin
     schema = AdminCreate
 
@@ -15,39 +14,43 @@ class AdminController(BaseUser):
         return "admin"
 
     @staticmethod
+    def register_new_admin(data):
+        password = data.get('password_hash')
+        data['password_hash'] = EncryptionService.generate_password_hash(password)
+
+        new_admin = AdminController.create(data=data)
+        admin = AdminController(entity_id=new_admin.id)
+
+        response = {
+            "success": True,
+            "access_token": admin.generate_access_token(),
+            "user_id": new_admin.id
+        }
+
+        return response, 201
+
+    @staticmethod
     def modify_admin_action_endpoint(admin_id, data):
-        try:
-            admin = AdminService()
-            result, status = admin.modify_admin_action(admin_id, data)
-            return result, status
-        except Exception as e:
-            return {"success": False, "error": f"An unexpected error occurred: {e}"}, 500
+        admin = AdminService()
+        response = admin.modify_admin_action(admin_id, data)
+        return response, 200
 
     @staticmethod
     def grant_premium_endpoint(admin_id, user_id):
-        try:
-            admin = AdminService()
-            result, status = admin.grant_premium_admin_action(admin_id, user_id)
-            return result, status
-        except Exception as e:
-            return {"success": False, "error": f"An unexpected error occurred: {e}"}, 500
+        admin = AdminService()
+        response = admin.grant_premium_admin_action(admin_id, user_id)
+        return response, 200
 
     @classmethod
-    def get_profile_data(cls, access_token):
-        admin_id = cls.get_id_from_access_token(access_token)
+    def get_profile_data(cls, admin_id):
         admin = cls.get_by_id(admin_id)
-        response_data = {
+        response = {
             "name": admin.name,
             "image": admin.avatar,
         }
-        return jsonify(AdminProfileSchema().dump(response_data)), 200
+        return response, 200
 
     @classmethod
-    def get_admin_statistics(cls, access_token, period):
-        try:
-            if BaseUser.get_role_from_access_token(access_token) != "admin":
-                # TODO exception
-                raise "RoleError"
-            return StatisticsService.admin_statistics_count(period)
-        except Exception as e:
-            return {"success": False, "error": f"An unexpected error occurred: {e}"}, 500
+    def get_admin_statistics(cls, period):
+        response = StatisticsService.admin_statistics_count(period)
+        return response, 200
