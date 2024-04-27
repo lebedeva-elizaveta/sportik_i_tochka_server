@@ -1,62 +1,75 @@
-from datetime import datetime
 from operator import itemgetter
-from flask import jsonify
+
+from app.exceptions.exceptions import InvalidRoleException
 from app.models.achievement.controller import AchievementController
-from app.models.achievement.schemas import AchievementListSchema
-from app.models.base_controller import BaseUser
+from app.models.base_controller import BaseController
+from app.models.premium.controller import PremiumController
 from app.models.user.model import User
-from app.models.user.schemas import UserCreate, UserProfileSchema
-from app.models.premium.model import Premium
+from app.models.user.schemas import UserCreate
+from app.services.security_service import EncryptionService
 from app.services.statistics_service import StatisticsService
 from app.services.user_service import UserService
 
 
-class UserController(BaseUser):
+class UserController(BaseController):
     model = User
     schema = UserCreate
 
     def get_role(self):
         return "user"
 
-    @classmethod
-    def premium_or_regular(cls, user_id):
-        if not isinstance(user_id, int):
-            raise ValueError("user_id must be an integer")
-        current_datetime = datetime.utcnow()
-        active_premium = Premium.query.filter_by(user_id=user_id).filter(
-            Premium.end_date > current_datetime
-        ).first()
+    @staticmethod
+    def register_new_user(data):
+        password = data.get('password_hash')
+        data['password_hash'] = EncryptionService.generate_password_hash(password)
+
+        new_user = UserController.create(data=data)
+        user = UserController(entity_id=new_user.id)
+
+        response = {
+            "success": True,
+            "access_token": user.generate_access_token(),
+            "user_id": new_user.id
+        }
+
+        return response, 201
+
+    @staticmethod
+    def get_user_status(user_id):
+        active_premium = PremiumController.is_active(user_id)
         if active_premium:
-            return "premium"
-        return "regular"
+            user_status = "premium"
+        else:
+            user_status = "regular"
+        return user_status
 
     @classmethod
-    def get_profile_data(cls, access_token, period):
-        user_id = cls.get_id_from_access_token(access_token)
+    def get_profile_data(cls, user_id, period):
         user = cls.get_by_id(user_id)
         statistics = StatisticsService.user_statistics_count(user_id, period)
         achievements = AchievementController.get_by_user_id(user_id)
-        response_data = {
+        response = {
             "name": user.name,
             "image": user.avatar,
             "statistics": statistics,
-            "achievements": AchievementListSchema().dump({"achievements": achievements}).get("achievements")
+            "achievements": achievements
         }
-        return jsonify(UserProfileSchema().dump(response_data)), 200
+        return response, 200
 
     @classmethod
     def get_rating(cls):
         users = User.query.all()
         list_of_users = []
         for user in users:
-            role = UserController.premium_or_regular(user.id)
+            role = UserController.get_user_status(user.id)
             list_of_users.append(UserService.get_user_data_for_rating(user, role))
-        return sorted(filter(None, list_of_users), key=itemgetter('rating'))
+        sorted_list = sorted(filter(None, list_of_users), key=itemgetter('rating'))
+        return {"users": sorted_list}, 200
 
-    @classmethod
-    def get_premium_statistics(cls, access_token, period):
-        user_id = cls.get_id_from_access_token(access_token)
-
-        if cls.premium_or_regular(user_id) != "premium":
-            return {"success": False, "message": "User is not premium"}, 403
-        return StatisticsService.premium_statistics_count(user_id, period)
+    @staticmethod
+    def get_premium_statistics(user_id, period):
+        user_status = UserController.get_user_status(user_id)
+        if user_status != "premium":
+            raise InvalidRoleException("User is not premium")
+        response = StatisticsService.premium_statistics_count(user_id, period)
+        return response, 200

@@ -7,7 +7,6 @@ from app.models.achievement.controller import AchievementController
 from app.models.achievement.schemas import AchievementListSchema
 from app.models.activity.controller import ActivityController
 from app.models.activity.model import Activity
-from app.models.user.schemas import UserDataForRatingSchema
 from app.services.statistics_service import StatisticsService
 
 
@@ -52,4 +51,4 @@ class UserService:
             "achievements": AchievementListSchema().dump({"achievements": user_achievements}).get("achievements"),
         }
 
-        return UserDataForRatingSchema().dump(user_data)
+        return user_data

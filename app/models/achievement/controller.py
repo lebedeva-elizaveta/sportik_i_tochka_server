@@ -1,6 +1,7 @@
-from werkzeug.exceptions import NotFound
+from marshmallow import ValidationError
 
 from app.database import db
+from app.exceptions.exceptions import NotFoundException
 from app.models.achievement.model import Achievement
 from app.models.achievement.schemas import AchievementSchema
 
@@ -11,11 +12,14 @@ class AchievementController:
     def __init__(self, achievement_id):
         self.db_entity = db.session.query(self.model).filter(self.model.id == achievement_id).first()
         if not self.db_entity:
-            raise NotFound("Achievement not found")
+            raise NotFoundException("Achievement not found")
 
     @classmethod
     def create(cls, data):
-        validated_data = AchievementSchema().load(data)
+        try:
+            validated_data = AchievementSchema().load(data)
+        except ValidationError as ve:
+            raise
         new_achievement = cls.model(**validated_data)
         db.session.add(new_achievement)
         db.session.commit()

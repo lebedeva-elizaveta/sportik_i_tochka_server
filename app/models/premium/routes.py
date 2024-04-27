@@ -1,47 +1,30 @@
 from flask import Blueprint, request, jsonify
 
+from app.decorators import check_authorization, check_role_user
+from app.models.card.schemas import CardDataSchema
 from app.models.premium.controller import PremiumController
-from app.models.user.controller import UserController
 
 api_premium_bp = Blueprint('premium', __name__)
 
 
-@api_premium_bp.route('/buy_premium', methods=['POST'])
-def buy_premium():
+@api_premium_bp.route('/premium', methods=['POST'])
+@check_authorization
+@check_role_user
+def buy_premium(user_id, **kwargs):
     """
     Купить премиум
     """
-    try:
-        access_token = request.headers.get('Authorization')
-        user_id = UserController.get_id_from_access_token(access_token)
-        if not user_id:
-            return jsonify({"success": False}), 401
-        user = UserController.get_by_id(user_id)
-        if not user:
-            return jsonify({"success": False}), 404
-        try:
-            card_data = request.json
-            result, status = PremiumController.buy_premium(user_id, card_data)
-            return jsonify(result), status
-        except Exception as e:
-            return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+    card_data = CardDataSchema().load(request.json)
+    result, status = PremiumController.buy_premium(user_id, card_data)
+    return jsonify(result), status
 
 
-@api_premium_bp.route('/cancel_premium', methods=['PUT'])
-def cancel_premium():
+@api_premium_bp.route('/premium/cancel', methods=['PUT'])
+@check_authorization
+@check_role_user
+def cancel_premium(user_id, **kwargs):
     """
     Отменить премиум
     """
-    try:
-        access_token = request.headers.get('Authorization')
-        user_id = UserController.get_id_from_access_token(access_token)
-        if not user_id:
-            return jsonify({"success": False}), 401
-        user = UserController.get_by_id(user_id)
-        if not user:
-            return jsonify({"success": False}), 404
-        return PremiumController.cancel_premium(user_id)
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+    result, status = PremiumController.cancel_premium(user_id)
+    return jsonify(result), status

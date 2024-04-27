@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from marshmallow import Schema, fields, validate, pre_load
+from marshmallow import Schema, fields, validate, pre_load, ValidationError
 
 
-class CardData(Schema):
+class CardDataSchema(Schema):
     card_name = fields.Str(required=True, validate=[validate.Length(min=1, max=100)])
     card_number = fields.Str(
         required=True,
@@ -21,16 +21,16 @@ class CardData(Schema):
     def adjust_year(self, data, **kwargs):
         if 'year' in data:
             year_str = str(data['year'])
+            if not year_str.isdigit():
+                print(year_str)
+                raise ValidationError("Year must be a numeric value")
             if len(year_str) == 2:
                 current_year = datetime.utcnow().year
                 current_century = (current_year // 100) * 100
                 year = int(year_str)
-                if year < current_year % 100:
-                    data['year'] = current_century + year
-                else:
-                    data['year'] = current_century + year
+                data['year'] = current_century + year
             else:
-                data['year'] = int(data['year'])
+                data['year'] = int(year_str)
         return data
 
     year = fields.Int(

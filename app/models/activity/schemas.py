@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields, validate
 from marshmallow_enum import EnumField
+
 from app.models.activity.model import ActivityType
 
 

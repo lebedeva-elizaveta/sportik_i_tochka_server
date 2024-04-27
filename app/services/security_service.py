@@ -5,7 +5,6 @@ from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from app.config import settings
-from app.models.card.schemas import EncryptedCardSchema
 
 
 class EncryptionService:
@@ -40,10 +39,10 @@ class EncryptionService:
         year = str(card_data['year'])
         cvv = str(card_data['cvv'])
 
-        encrypted_card_number = EncryptionService._encrypt_data(settings.aes_key, settings.aes_iv, card_number.encode()).hex()
-        encrypted_month = EncryptionService._encrypt_data(settings.aes_key, settings.aes_iv, month.encode()).hex()
-        encrypted_year = EncryptionService._encrypt_data(settings.aes_key, settings.aes_iv, year.encode()).hex()
-        encrypted_cvv = EncryptionService._encrypt_data(settings.aes_key, settings.aes_iv, cvv.encode()).hex()
+        encrypted_card_number = EncryptionService._encrypt_field(card_number)
+        encrypted_month = EncryptionService._encrypt_field(month)
+        encrypted_year = EncryptionService._encrypt_field(year)
+        encrypted_cvv = EncryptionService._encrypt_field(cvv)
 
         encrypted_data = {
             "card_name": card_name,
@@ -53,7 +52,11 @@ class EncryptionService:
             "cvv": encrypted_cvv
         }
 
-        schema = EncryptedCardSchema()
-        serialized_data = schema.dump(encrypted_data)
+        return encrypted_data
 
-        return serialized_data
+    @staticmethod
+    def _encrypt_field(field):
+        encrypted_field = EncryptionService._encrypt_data(
+            settings.aes_key, settings.aes_iv, field.encode()
+        ).hex()
+        return encrypted_field
