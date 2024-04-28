@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta
 
+import pytz
+
 from app.exceptions.exceptions import NotFoundException
 from app.models.activity.controller import ActivityController
 from app.models.premium.model import Premium
 from app.models.user.model import User
+
+moscow_tz = pytz.timezone('Europe/Moscow')
 
 
 class StatisticsService:
@@ -15,7 +19,7 @@ class StatisticsService:
             'year': 365,
         }
         if period_time in period_dict:
-            return datetime.now() - timedelta(days=period_dict[period_time])
+            return datetime.now().astimezone(moscow_tz) - timedelta(days=period_dict[period_time])
         elif period_time == 'all_time':
             return None
         else:
@@ -110,7 +114,7 @@ class StatisticsService:
         if start_date is None:
             first_user_registration = User.query.order_by(User.date_of_registration).first()
             start_date = first_user_registration.date_of_registration
-        end_date = datetime.now()
+        end_date = datetime.now().astimezone(moscow_tz)
 
         total_users = User.query.count()
         graph_data = []
@@ -135,7 +139,7 @@ class StatisticsService:
 
         response = {
             'total_users': total_users,
-            'premium_users': Premium.query.filter(Premium.end_date >= datetime.now()).count(),
+            'premium_users': Premium.query.filter(Premium.end_date >= datetime.now().astimezone(moscow_tz)).count(),
             'graph_data': graph_data
         }
 

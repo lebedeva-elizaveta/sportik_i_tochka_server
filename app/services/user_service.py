@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytz
 from sqlalchemy import func
 
 from app.database import db
@@ -10,11 +11,14 @@ from app.models.activity.model import Activity
 from app.services.statistics_service import StatisticsService
 
 
+moscow_tz = pytz.timezone('Europe/Moscow')
+
+
 class UserService:
 
     @staticmethod
     def get_user_rating(user_id):
-        start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        start_of_month = datetime.now().astimezone(moscow_tz).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         users_dist = db.session.query(Activity.user_id, func.sum(Activity.distance_in_meters)). \
             filter(Activity.date >= start_of_month). \

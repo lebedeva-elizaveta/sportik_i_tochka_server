@@ -1,9 +1,13 @@
 from datetime import datetime
 
+import pytz
+
 from app.exceptions.exceptions import NotFoundException, InvalidActionException, ActionIsNotAvailableException
 from app.models.card.controller import CardController
 from app.models.premium.model import Premium
 from app.database import db
+
+moscow_tz = pytz.timezone('Europe/Moscow')
 
 
 class PremiumController:
@@ -25,8 +29,8 @@ class PremiumController:
     def get_active_premium(cls, user_id):
         premium = cls.model.query.filter(
             cls.model.user_id == user_id,
-            cls.model.start_date <= datetime.utcnow(),
-            cls.model.end_date >= datetime.utcnow(),
+            cls.model.start_date <= datetime.utcnow().astimezone(moscow_tz),
+            cls.model.end_date >= datetime.utcnow().astimezone(moscow_tz),
         ).first()
         return premium
 
@@ -54,7 +58,7 @@ class PremiumController:
         if not PremiumController.is_active(user_id):
             raise ActionIsNotAvailableException("User is not premium")
         premium = PremiumController.get_active_premium(user_id)
-        premium.end_date = datetime.utcnow()
+        premium.end_date = datetime.utcnow().astimezone(moscow_tz)
         db.session.commit()
         result = {
             "success": True

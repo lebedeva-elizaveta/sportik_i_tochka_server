@@ -1,6 +1,6 @@
 from operator import itemgetter
 
-from app.exceptions.exceptions import InvalidRoleException
+from app.exceptions.exceptions import InvalidRoleException, NotFoundException
 from app.models.achievement.controller import AchievementController
 from app.models.base_controller import BaseController
 from app.models.premium.controller import PremiumController
@@ -73,3 +73,13 @@ class UserController(BaseController):
             raise InvalidRoleException("User is not premium")
         response = StatisticsService.premium_statistics_count(user_id, period)
         return response, 200
+
+    @staticmethod
+    def get_top_user():
+        rating_result = UserController.get_rating()
+        users = rating_result[0]["users"]
+        if users:
+            top_user = users[0]
+            return top_user
+        else:
+            raise NotFoundException("No users found")

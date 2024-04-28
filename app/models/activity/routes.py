@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 from app.models.activity.controller import ActivityController
 from app.models.activity.schemas import ActivityListSchema
 from app.decorators import check_authorization, check_role_user
+from app.services.achievement_service import AchievementService
 
 api_activity_bp = Blueprint('activity', __name__)
 
@@ -18,6 +19,7 @@ def add_activity(user_id, **kwargs):
     activity_data = request.json
     activity_data['user_id'] = user_id
     response, status = ActivityController.add_activity(activity_data)
+    AchievementService.get_achievement(user_id)
     return jsonify(response), status
 
 
