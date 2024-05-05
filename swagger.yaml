@@ -232,7 +232,7 @@ paths:
   /user/register:
     post:
       tags:
-        - "Регистрация"
+        - "Пользователи"
       summary: "Создать новый аккаунт пользователя"
       parameters:
         - name: "email"
@@ -299,7 +299,7 @@ paths:
   /admin/register:
     post:
       tags:
-        - "Регистрация"
+        - "Администраторы"
       summary: "Создать новый аккаунт администратора"
       parameters:
         - name: "email"
@@ -362,7 +362,8 @@ paths:
   /login:
     post:
       tags:
-        - "Вход в аккаунт"
+        - "Пользователи"
+        - "Администраторы"
       summary: "Войти в аккаунт"
       parameters:
         - name: "login_data"
@@ -418,7 +419,7 @@ paths:
   /activities:
     post:
       tags:
-        - "Взаимодействие с активностями"
+        - "Активности"
       summary: "Добавить активность"
       parameters:
         - name: Authorization
@@ -497,7 +498,7 @@ paths:
             $ref: '#/components/schemas/NotFoundException'
     get:
       tags:
-        - "Взаимодействие с активностями"
+        - "Активности"
       summary: Получить список активностей
       description: Возвращает список всех активностей пользователя.
       parameters:
@@ -579,7 +580,7 @@ paths:
   /admin/action:
     put:
       tags:
-        - "Взаимодействие администраторов с пользователями"
+        - "Администраторы"
       summary: "Заблокировать, разблокировать, забрать премиум"
       parameters:
         - name: Authorization
@@ -639,7 +640,7 @@ paths:
             $ref: '#/components/schemas/Conflict'
     post:
       tags:
-        - "Взаимодействие администраторов с пользователями"
+        - "Администраторы"
       summary: "Выдать премиум-подписку"
       parameters:
         - name: Authorization
@@ -691,7 +692,7 @@ paths:
   /premium:
     post:
       tags:
-        - "Взаимодействие с премиум-подпиской"
+        - "Премиум-подписка"
       summary: "Покупка премиума пользователем"
       parameters:
         - name: Authorization
@@ -755,7 +756,8 @@ paths:
   /data:
     get:
       tags:
-        - "Личные данные"
+        - "Пользователи"
+        - "Администраторы"
       summary: "Получить личные данные"
       description: "Возвращает личные данные"
       parameters:
@@ -806,7 +808,8 @@ paths:
             $ref: '#/components/schemas/InvalidRoleException'
     put:
       tags:
-        - "Личные данные"
+        - "Пользователи"
+        - "Администраторы"
       summary: "Изменить личные данные"
       description: "Изменяет личные данные"
       parameters:
@@ -869,7 +872,7 @@ paths:
   /premium/cancel:
     put:
       tags:
-        - "Взаимодействие с премиум-подпиской"
+        - "Премиум-подписка"
       summary: "Отменить премиум-подписку"
       description: "Отменяет премиум-подписку"
       parameters:
@@ -901,7 +904,7 @@ paths:
   /user/profile:
     get:
       tags:
-        - "Личный профиль"
+        - "Пользователи"
       summary: "Получить профиль пользователя"
       description: "Возвращает данные для профиля пользователя"
       parameters:
@@ -963,7 +966,7 @@ paths:
   /admin/profile:
     get:
       tags:
-        - "Личный профиль"
+        - "Администраторы"
       summary: "Получить профиль администратора"
       description: "Возвращает данные для профиля администратора"
       parameters:
@@ -1002,7 +1005,7 @@ paths:
   /rating:
     get:
       tags:
-        - "Рейтинг"
+        - "Пользователи"
       summary: "Получить рейтинг пользователей"
       description: "Возвращает данные для рейтинга пользователей"
       parameters:

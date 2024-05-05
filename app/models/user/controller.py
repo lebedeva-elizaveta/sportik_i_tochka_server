@@ -1,6 +1,6 @@
-from operator import itemgetter
+from flask_apscheduler import APScheduler
 
-from app.exceptions.exceptions import InvalidRoleException
+from app.exceptions.exceptions import InvalidRoleException, NotFoundException
 from app.models.achievement.controller import AchievementController
 from app.models.base_controller import BaseController
 from app.models.premium.controller import PremiumController
@@ -14,6 +14,8 @@ from app.services.user_service import UserService
 class UserController(BaseController):
     model = User
     schema = UserCreate
+
+    scheduler = APScheduler()
 
     def get_role(self):
         return "user"
@@ -59,11 +61,24 @@ class UserController(BaseController):
     @classmethod
     def get_rating(cls):
         users = User.query.all()
-        list_of_users = []
+        active_users = []
+        inactive_users = []
+
         for user in users:
             role = UserController.get_user_status(user.id)
-            list_of_users.append(UserService.get_user_data_for_rating(user, role))
-        sorted_list = sorted(filter(None, list_of_users), key=itemgetter('rating'))
+            user_data = UserService.get_user_data_for_rating(user, role)
+            if user_data["total_activities_count"] > 0:
+                active_users.append(user_data)
+            else:
+                inactive_users.append(user_data)
+
+        active_users_sorted = UserService.sort_active_users(active_users)
+        base_rating = len(active_users_sorted)
+
+        inactive_users_sorted = UserService.sort_inactive_users(inactive_users, base_rating)
+
+        sorted_list = active_users_sorted + inactive_users_sorted
+
         return {"users": sorted_list}, 200
 
     @staticmethod
@@ -73,3 +88,20 @@ class UserController(BaseController):
             raise InvalidRoleException("User is not premium")
         response = StatisticsService.premium_statistics_count(user_id, period)
         return response, 200
+
+    @staticmethod
+    def get_top_user():
+        rating_result = UserController.get_rating()
+        users = rating_result[0]["users"]
+        if users:
+            top_user = users[0]
+            return top_user
+        else:
+            raise NotFoundException("No users found")
+
+    @staticmethod
+    @scheduler.task('cron', id='give_premium_award', day=1, hour=0, minute=0, timezone='Europe/Moscow')
+    def premium_award():
+        with UserController.scheduler.app.app_context():
+            user = UserController.get_top_user()
+            UserService.premium_award(user)

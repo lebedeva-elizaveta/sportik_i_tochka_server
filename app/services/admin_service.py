@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytz
 from marshmallow import ValidationError
 
 from app.exceptions.exceptions import NotFoundException, ActionIsNotAvailableException
@@ -10,6 +11,8 @@ from app.models.premium.model import Premium
 from app.database import db
 from app.models.user.controller import UserController
 from app.models.user.model import User
+
+moscow_tz = pytz.timezone('Europe/Moscow')
 
 
 class AdminService:
@@ -55,7 +58,7 @@ class AdminService:
         if not PremiumController.is_active(user.id):
             raise ActionIsNotAvailableException("User is not premium")
         premium = PremiumController.get_active_premium(user.id)
-        premium.end_date = datetime.utcnow()
+        premium.end_date = datetime.utcnow().astimezone(moscow_tz)
         self._add_admin_premium_data(admin_id, premium.id, "REVOKE_PREMIUM")
         db.session.commit()
         return {

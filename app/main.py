@@ -1,3 +1,5 @@
+import logging
+
 from flasgger import Swagger
 from flask import Flask
 from flask_migrate import Migrate
@@ -13,11 +15,24 @@ from app.models.activity.routes import api_activity_bp
 from app.models.admin.routes import api_admin_bp
 from app.models.premium.routes import api_premium_bp
 from app.models.common_routes import api_bp
-
 from app.models.user.routes import api_user_bp
 from app.database import db
+from app.models.user.controller import UserController
 
 app = Flask(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,  # Уровень логирования
+    format='%(asctime)s [%(levelname)s] %(message)s',  # Формат сообщений
+    handlers=[
+        logging.StreamHandler(),  # Вывод в консоль
+        # logging.FileHandler("app.log")  # Вывод в файл
+    ]
+)
+
+UserController.scheduler.init_app(app)
+UserController.scheduler.start()
+
 app.config['SQLALCHEMY_DATABASE_URI'] = settings.database_url
 db.init_app(app)
 
@@ -44,4 +59,4 @@ app.register_error_handler(InvalidPasswordException, handle_invalid_password_exc
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run()
