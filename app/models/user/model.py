@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz
+from sqlalchemy.sql import sqltypes
 
 from app.database import db
 
@@ -17,5 +18,5 @@ class User(db.Model):
     phone = db.Column(db.String(255), nullable=False)
     weight = db.Column(db.Integer, nullable=False)
     avatar = db.Column(db.Text, nullable=True)
-    date_of_registration = db.Column(db.DateTime, default=datetime.now().astimezone(moscow_tz))
+    date_of_registration = db.Column(sqltypes.TIMESTAMP(timezone=True), default=datetime.utcnow().astimezone(moscow_tz))
     is_blocked = db.Column(db.Boolean, nullable=False, default=False)
