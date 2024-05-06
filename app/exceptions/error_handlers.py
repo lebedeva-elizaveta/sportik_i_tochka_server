@@ -2,7 +2,8 @@ from flask import jsonify, Flask
 from marshmallow import ValidationError
 
 from app.exceptions.exceptions import InvalidTokenException, NotFoundException, InvalidRoleException, \
-    InvalidActionException, ActionIsNotAvailableException, AlreadyExistsException, InvalidPasswordException
+    InvalidActionException, ActionIsNotAvailableException, AlreadyExistsException, InvalidPasswordException, \
+    UnprocessableEntityException
 
 app = Flask(__name__)
 
@@ -67,3 +68,9 @@ def handle_unavailable_action(error):
 def handle_already_exists_exception(error):
     """Возвращает 409 с сообщением о том, что нарушило требование уникальности"""
     return jsonify({"free": False, "error": str(error)}), 409
+
+
+@app.errorhandler(UnprocessableEntityException)
+def handle_unprocessable_entity(error):
+    """Возвращает 422 с сообщением, где допущена логическая ошибка"""
+    return jsonify({"success": False, "error": str(error)}), 422

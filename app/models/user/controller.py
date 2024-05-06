@@ -105,3 +105,8 @@ class UserController(BaseController):
         with UserController.scheduler.app.app_context():
             user = UserController.get_top_user()
             UserService.premium_award(user)
+
+    @classmethod
+    def change_password(cls, email, new_password, confirm_password):
+        user = cls.get_by_email(email)
+        return BaseController.change_password(user, new_password, confirm_password)

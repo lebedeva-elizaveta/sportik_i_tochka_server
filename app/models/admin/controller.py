@@ -54,3 +54,8 @@ class AdminController(BaseController):
     def get_admin_statistics(cls, period):
         response = StatisticsService.admin_statistics_count(period)
         return response, 200
+
+    @classmethod
+    def change_password(cls, email, new_password, confirm_password):
+        admin = cls.get_by_email(email)
+        return BaseController.change_password(admin, new_password, confirm_password)
