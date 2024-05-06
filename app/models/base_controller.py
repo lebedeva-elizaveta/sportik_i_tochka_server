@@ -5,10 +5,12 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from marshmallow import ValidationError
 
+
 from app.config import settings, ALGORITHM
 from app.database import db
-from app.exceptions.exceptions import NotFoundException, InvalidTokenException
+from app.exceptions.exceptions import NotFoundException, InvalidTokenException, UnprocessableEntityException
 from app.services.common_service import CommonService
+from app.services.security_service import EncryptionService
 
 
 class BaseController:
@@ -37,21 +39,20 @@ class BaseController:
     @classmethod
     def get_by_email(cls, email):
         entity = db.session.query(cls.model).filter(cls.model.email == email).first()
-        if not entity:
-            return None
         return entity
 
     @classmethod
     def get_by_id(cls, entity_id):
         entity = db.session.query(cls.model).filter(cls.model.id == entity_id).first()
-        if not entity:
-            raise NotFoundException("Пользователь или админ не найден")
         return entity
 
     @classmethod
     def check_email(cls, email):
         entity = db.session.query(cls.model).filter(cls.model.email == email).first()
-        return entity
+        if entity:
+            return True
+        else:
+            return False
 
     @classmethod
     def get_current_entity_data(cls, access_token):
@@ -123,3 +124,12 @@ class BaseController:
         if 'role' not in payload or payload['role'] is None:
             raise InvalidTokenException("Invalid token")
         return payload['role']
+
+    @staticmethod
+    def change_password(entity, new_password, confirm_password):
+        if new_password != confirm_password:
+            raise UnprocessableEntityException("Passwords do not match")
+        hashed_password = EncryptionService.generate_password_hash(new_password)
+        entity.password_hash = hashed_password
+        db.session.commit()
+        return {"success": True}, 200

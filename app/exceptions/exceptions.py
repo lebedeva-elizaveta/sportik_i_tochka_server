@@ -32,3 +32,8 @@ class ActionIsNotAvailableException(Exception):
 class AlreadyExistsException(Exception):
     """Исключение, если нарушено требование уникальности"""
     pass
+
+
+class UnprocessableEntityException(Exception):
+    """Исключение, если допущена логическая ошибка"""
+    pass

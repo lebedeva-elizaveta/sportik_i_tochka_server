@@ -1139,3 +1139,54 @@ paths:
           schema:
             type: object
             $ref: '#/components/schemas/NotFoundException'
+  /password:
+    put:
+      tags:
+        - "Восстановление пароля"
+      summary: "Восстановить пароль"
+      description: "Восстанавливает забытый пароль"
+      parameters:
+        - name: "email"
+          in: "header"
+          required: true
+          type: "string"
+          description: "Email пользователя"
+        - name: "data"
+          in: "body"
+          required: true
+          schema:
+            id: "PasswordRequest"
+            required:
+              - "new_password"
+              - "confirm_password"
+            properties:
+              new_password:
+                type: "string"
+                description: "Новый пароль"
+              confirm_password:
+                type: "string"
+                description: "Повторение пароля"
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: PasswordResponse
+            properties:
+              success:
+                type: boolean
+                description: Успешное восстановление пароля
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+        422:
+          description: Ошибка, если введенные пароли не совпадают
+          schema:
+            properties:
+              success:
+                type: boolean
+                description: Введенные пароли не совпадают
+              error:
+                type: string
+                description: сообщение об ошибке

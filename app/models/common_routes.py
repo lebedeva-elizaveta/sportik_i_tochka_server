@@ -2,6 +2,8 @@ from flask import request, Blueprint, jsonify
 from marshmallow import ValidationError
 
 from app.decorators import check_authorization
+from app.exceptions.exceptions import NotFoundException
+from app.models.admin.controller import AdminController
 from app.models.base_controller import BaseController
 from app.models.common_schemas import EntityDataSchema, LoginResponseSchema, LoginRequestSchema
 from app.models.user.controller import UserController
@@ -68,3 +70,25 @@ def get_rating(**kwargs):
     except ValidationError:
         raise
     return jsonify(serialized_response), status
+
+
+@api_bp.route('/password', methods=['PUT'])
+def change_password():
+    """
+    Восстановить пароль
+    """
+    email = request.headers.get("email")
+    user = UserController.get_by_email(email)
+    if not user:
+        admin = AdminController.get_by_email(email)
+        if not admin:
+            raise NotFoundException("User not found")
+    data = request.json
+    new_password = data.get("new_password", "")
+    confirm_password = data.get("confirm_password", "")
+
+    if user:
+        response, status = UserController.change_password(email, new_password, confirm_password)
+    else:
+        response, status = AdminController.change_password(email, new_password, confirm_password)
+    return jsonify(response), status
