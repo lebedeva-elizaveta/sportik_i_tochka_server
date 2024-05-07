@@ -32,7 +32,7 @@ class AdminController(BaseController):
     @staticmethod
     def modify_admin_action_endpoint(admin_id, data):
         admin = AdminService()
-        response = admin.modify_admin_action(admin_id, data)
+        response = admin.admin_action(admin_id, data)
         return response, 200
 
     @staticmethod

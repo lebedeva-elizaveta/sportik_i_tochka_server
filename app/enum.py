@@ -7,11 +7,8 @@ class ActivityType(Enum):
     CYCLING = 'CYCLING'
 
 
-class AdminPremiumAction(Enum):
-    GRANT_PREMIUM = 'GRANT_PREMIUM'
-    REVOKE_PREMIUM = 'REVOKE_PREMIUM'
-
-
-class AdminUserAction(Enum):
+class AdminAction(Enum):
     BLOCK = 'BLOCK'
     UNBLOCK = 'UNBLOCK'
+    GRANT_PREMIUM = 'GRANT_PREMIUM'
+    REVOKE_PREMIUM = 'REVOKE_PREMIUM'
