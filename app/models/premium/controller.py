@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta
 
 import pytz
@@ -66,9 +65,10 @@ class PremiumController:
     def buy_premium(user_id, card_data):
         if PremiumController.is_active(user_id):
             raise ActionIsNotAvailableException("User is already premium")
-        is_premium_available = CardController.is_card_available(user_id, card_data)
-        if not is_premium_available:
-            raise InvalidActionException("Invalid action")
+        if not card_data.get("card_id"):
+            is_premium_available = CardController.is_card_available(user_id, card_data)
+            if not is_premium_available:
+                raise InvalidActionException("Invalid action")
         new_premium = PremiumController.create(user_id)
         result = {
             "success": True,
@@ -88,25 +88,11 @@ class PremiumController:
         }
         return result, 200
 
-    @staticmethod
-    def extend_premium(premium_id, new_end_date):
-        # Найти премиум-подписку
-        premium = Premium.query.filter_by(id=premium_id).first()
-
+    @classmethod
+    def extend_premium(cls, premium_id, new_end_date):
+        premium = cls.model.query.filter_by(id=premium_id).first()
         if not premium:
-            logging.error("Premium subscription not found with ID: %d", premium_id)
-            raise NotFoundException("Premium subscription not found")
-
-        # Обновить end_date
+            raise NotFoundException("Premium not found")
         premium.end_date = new_end_date
-
-        try:
-            # Фиксируем изменения
-            db.session.commit()
-            logging.info("Premium subscription extended with ID: %d to new end_date: %s", premium_id, new_end_date)
-        except Exception as e:
-            logging.error("Error committing to the database: %s", str(e))
-            db.session.rollback()  # Откат транзакции
-            raise
-
+        db.session.commit()
         return premium

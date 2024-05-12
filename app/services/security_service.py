@@ -60,3 +60,19 @@ class EncryptionService:
             settings.aes_key, settings.aes_iv, field.encode()
         ).hex()
         return encrypted_field
+
+    @staticmethod
+    def _decrypt_data(key, iv, data):
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        unpadder = padding.PKCS7(128).unpadder()
+        decrypted_data = decryptor.update(data) + decryptor.finalize()
+        unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+        return unpadded_data
+
+    @staticmethod
+    def decrypt_card_number(encrypted_card_number):
+        decrypted_card_number = EncryptionService._decrypt_data(
+            settings.aes_key, settings.aes_iv, bytes.fromhex(encrypted_card_number)
+        ).decode()
+        return decrypted_card_number
