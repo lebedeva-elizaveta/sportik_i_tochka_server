@@ -690,6 +690,45 @@ paths:
             type: object
             $ref: '#/components/schemas/Conflict'
   /premium:
+    get:
+      tags:
+        - "Премиум-подписка"
+      summary: "Получить карты перед покупкой премиума"
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          description: Токен доступа пользователя
+      responses:
+        200:
+          description: Успешно
+          schema:
+              type: object
+              properties:
+                card_numbers:
+                  type: array
+                  items:
+                    type: string
+                card_ids:
+                  type: array
+                  items:
+                    type: integer
+        401:
+          description: Токен некорректный
+          schema:
+            type: object
+            $ref: '#/components/schemas/Unauthorized'
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
+        404:
+          description: Пользователь не найден
+          schema:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
     post:
       tags:
         - "Премиум-подписка"
