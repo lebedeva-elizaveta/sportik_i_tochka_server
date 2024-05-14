@@ -50,6 +50,6 @@ app.register_error_handler(InvalidPasswordException, handle_invalid_password_exc
 app.register_error_handler(UnprocessableEntityException, handle_unprocessable_entity)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run()
+with app.app_context():
+    db.create_all()
