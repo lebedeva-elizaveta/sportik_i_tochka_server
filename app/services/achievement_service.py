@@ -1,3 +1,4 @@
+import base64
 import os
 
 from app.models.achievement.controller import AchievementController
@@ -25,10 +26,15 @@ class AchievementService:
 
         for name, threshold in AchievementService.ACHIEVEMENT_THRESHOLDS.items():
             if total_distance >= threshold and not has_achievement(achievements, name):
-                image_path = os.path.join('achievements', f'achievement_{threshold}.jpg')
+                with open(os.path.join('app', 'models', 'achievement', 'achievements',
+                                       f'achievement_{threshold}.jpg'), 'rb') as image_file:
+                    image_binary = image_file.read()
+
+                image_base64 = base64.b64encode(image_binary).decode('utf-8')
+
                 data = {
                     "name": name,
-                    "image": image_path,
+                    "image": image_base64,
                     "distance": threshold,
                     "user_id": user_id
                 }

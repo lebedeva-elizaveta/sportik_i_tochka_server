@@ -39,6 +39,7 @@ class UserService:
             "name": user.name,
             "image": user.avatar,
             "role": role,
+            "is_blocked": user.is_blocked,
             "total_activities_count": total_activities_count,
             "total_distance_in_meters": statistics.get("total_distance_in_meters"),
             "total_time": statistics.get("total_time"),

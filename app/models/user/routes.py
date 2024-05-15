@@ -35,6 +35,7 @@ def get_user_profile(user_id, **kwargs):
         response = {
             "name": response["name"],
             "image": response["image"],
+            "rating": response["rating"],
             "statistics": UserStatisticsSchema().dump(response["statistics"]),
             "achievements": AchievementListSchema().dump({"achievements": response["achievements"]})["achievements"]
         }

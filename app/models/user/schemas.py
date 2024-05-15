@@ -26,6 +26,7 @@ class UserProfileSchema(Schema):
     image = fields.String(required=False)
     statistics = fields.Dict(required=True)
     achievements = fields.List(fields.Nested(AchievementSchema()))
+    rating = fields.Integer(required=True)
 
 
 class UserAverageStatisticsSchema(Schema):
@@ -40,6 +41,7 @@ class UserDataForRatingSchema(Schema):
     name = fields.String(required=True, validate=validate.Length(min=1))
     image = fields.String(required=False)
     role = fields.String(required=True)
+    is_blocked = fields.Bool(required=True)
     rating = fields.Integer(required=True)
     total_activities_count = fields.Integer(required=True)
     total_distance_in_meters = fields.Float(required=True)
