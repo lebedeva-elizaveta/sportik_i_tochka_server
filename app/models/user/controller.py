@@ -50,17 +50,27 @@ class UserController(BaseController):
         user = cls.get_by_id(user_id)
         statistics = StatisticsService.user_statistics_count(user_id, period)
         achievements = AchievementController.get_by_user_id(user_id)
+        rating_data, _ = cls.get_rating()
+        users = rating_data["users"]
+
+        user_rating = None
+        for idx, user_data in enumerate(users):
+            if user_data["id"] == user_id:
+                user_rating = user_data["rating"]
+                break
+
         response = {
             "name": user.name,
             "image": user.avatar,
             "statistics": statistics,
-            "achievements": achievements
+            "achievements": achievements,
+            "rating": user_rating
         }
         return response, 200
 
     @classmethod
     def get_rating(cls):
-        users = User.query.all()
+        users = cls.model.query.all()
         active_users = []
         inactive_users = []
 

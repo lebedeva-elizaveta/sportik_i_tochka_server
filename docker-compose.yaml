@@ -25,7 +25,13 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    tty: true
+    # tty: true
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
 
   pgadmin:
     image: dpage/pgadmin4:7
@@ -38,7 +44,9 @@ services:
       - "5050:5050"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-    tty: true
+    # tty: true
+    depends_on:
+      - db
 
 volumes:
   postgres_data:
