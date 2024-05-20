@@ -13,5 +13,10 @@ class Settings(BaseSettings):
 
 
 ALGORITHM = "HS256"
+FOLDER_ACTIVITIES = 'app/static/images/activities/'
+FOLDER_ACHIEVEMENTS = 'app/static/images/achievements/'
+FOLDER_AVATARS = 'app/static/images/avatars/'
+ALLOWED_EXTENSIONS = {'PNG', 'JPG', 'JPEG'}
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
 settings = Settings()

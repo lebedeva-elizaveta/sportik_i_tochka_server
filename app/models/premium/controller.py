@@ -25,8 +25,8 @@ class PremiumController:
         db.session.commit()
         return premium
 
-    @classmethod
-    def create_premium_award(cls, user_id):
+    @staticmethod
+    def create_premium_award(user_id):
         award = Premium_Award(user_id=user_id)
         db.session.add(award)
         db.session.commit()
@@ -41,8 +41,8 @@ class PremiumController:
         ).first()
         return premium
 
-    @classmethod
-    def get_premium_award(cls, user_id):
+    @staticmethod
+    def get_premium_award(user_id):
         now = datetime.utcnow().astimezone(moscow_tz)
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         next_month = (start_of_month + timedelta(days=32)).replace(day=1)

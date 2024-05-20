@@ -32,9 +32,6 @@ components:
         error:
           type: string
           description: "Сообщение об ошибке"
-        details:
-          type: string
-          description: "Конкретное описание ошибок"
     Conflict:
       type: object
       properties:
@@ -238,43 +235,46 @@ paths:
       tags:
         - "Пользователи"
       summary: "Создать новый аккаунт пользователя"
+      consumes:
+        - multipart/form-data
       parameters:
         - name: "email"
           in: "header"
           required: true
           type: "string"
           description: "Email пользователя"
-        - name: "register_data"
-          in: "body"
+        - name: avatar
+          in: formData
+          description: The uploaded file data
+          required: false
+          type: file
+          format: binary
+        - name: name
+          in: formData
+          type: string
           required: true
-          schema:
-            id: "RegisterRequest"
-            required:
-              - "name"
-              - "weight"
-              - "avatar"
-              - "phone"
-              - "birthday"
-              - "password_hash"
-            properties:
-              name:
-                type: "string"
-                description: "Имя пользователя"
-              weight:
-                type: "integer"
-                description: "Вес пользователя"
-              avatar:
-                type: "string"
-                description: "Аватар пользователя"
-              phone:
-                type: "string"
-                description: "Телефон пользователя"
-              birthday:
-                type: "string"
-                description: "Дата рождения пользователя в формате 'гггг-мм-дд'"
-              password_hash:
-                type: "string"
-                description: "Пароль пользователя"
+          description: Имя пользователя
+        - name: birthday
+          in: formData
+          type: string
+          required: true
+          description: Дата рождения
+        - name: weight
+          in: formData
+          type: number
+          format: float
+          required: true
+          description: Вес
+        - name: phone
+          in: formData
+          type: string
+          required: true
+          description: Телефон
+        - name: password_hash
+          in: formData
+          type: string
+          required: true
+          description: Пароль
       responses:
         '201':
           description: "Успешная регистрация"
@@ -305,39 +305,40 @@ paths:
       tags:
         - "Администраторы"
       summary: "Создать новый аккаунт администратора"
+      consumes:
+        - multipart/form-data
       parameters:
         - name: "email"
           in: "header"
           required: true
           type: "string"
           description: "Email администратора"
-        - name: "register_data"
-          in: "body"
+        - name: avatar
+          in: formData
+          description: The uploaded file data
+          required: false
+          type: file
+          format: binary
+        - name: name
+          in: formData
+          type: string
           required: true
-          schema:
-            id: "RegisterAdminRequest"
-            required:
-              - "name"
-              - "avatar"
-              - "phone"
-              - "birthday"
-              - "password_hash"
-            properties:
-              name:
-                type: "string"
-                description: "Имя администратора"
-              avatar:
-                type: "string"
-                description: "Аватар администратора"
-              phone:
-                type: "string"
-                description: "Телефон администратора"
-              birthday:
-                type: "string"
-                description: "Дата рождения администратора в формате 'гггг-мм-дд'"
-              password_hash:
-                type: "string"
-                description: "Пароль администратора"
+          description: Имя администратора
+        - name: birthday
+          in: formData
+          type: string
+          required: true
+          description: Дата рождения
+        - name: phone
+          in: formData
+          type: string
+          required: true
+          description: Телефон
+        - name: password_hash
+          in: formData
+          type: string
+          required: true
+          description: Пароль
       responses:
         '201':
           description: "Успешная регистрация"
@@ -425,49 +426,52 @@ paths:
       tags:
         - "Активности"
       summary: "Добавить активность"
+      consumes:
+        - multipart/form-data
       parameters:
         - name: Authorization
           in: header
           required: true
           type: string
           description: Токен доступа пользователя
-        - name: activity_data
-          in: body
+        - name: image
+          in: formData
+          description: The uploaded file data
           required: true
-          schema:
-            id: AddActivityRequest
-            required:
-              - activity_type
-              - date
-              - image
-              - avg_speed
-              - distance_in_meters
-              - duration
-              - calories_burned
-            properties:
-              activity_type:
-                type: string
-                enum: [ 'RUNNING', 'SWIMMING', 'CYCLING' ]
-                description: "Тип активности"
-              date:
-                type: string
-                description: Дата активности
-              image:
-                type: string
-                description: Отображение пути на карте
-              avg_speed:
-                type: number
-                format: float
-                description: Средняя скорость
-              distance_in_meters:
-                type: integer
-                description: Расстояние в метрах
-              duration:
-                type: integer
-                description: Длительность активности в секундах
-              calories_burned:
-                type: integer
-                description: Сожженные калории
+          type: file
+          format: binary
+        - name: activity_type
+          in: formData
+          required: true
+          type: string
+          enum: [ 'RUNNING', 'SWIMMING', 'CYCLING' ]
+          description: "Тип активности"
+        - name: date
+          in: formData
+          required: true
+          type: string
+          description: Дата активности
+        - name: avg_speed
+          in: formData
+          type: number
+          required: true
+          format: float
+          description: Средняя скорость
+        - name: distance_in_meters
+          in: formData
+          type: integer
+          required: true
+          description: Расстояние в метрах
+        - name: duration
+          in: formData
+          type: integer
+          required: true
+          description: Длительность активности в секундах
+        - name: calories_burned
+          in: formData
+          type: integer
+          required: true
+          description: Сожженные калории
       responses:
         201:
           description: Успешное добавление активности
@@ -517,13 +521,9 @@ paths:
           schema:
             id: ActivityResponse
             properties:
-              success:
-                type: boolean
-                description: Результат добавления активности
+              type: array
               activities:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActivityResponse'
+                $ref: '#/components/schemas/ActivityResponse'
           examples:
             NoActivities:
               description: Нет активностей
@@ -855,33 +855,41 @@ paths:
         - "Администраторы"
       summary: "Изменить личные данные"
       description: "Изменяет личные данные"
+      consumes:
+        - multipart/form-data
       parameters:
         - name: Authorization
           in: header
           required: true
           type: string
           description: Токен доступа пользователя
-        - name: new_data
-          in: body
-          required: true
-          schema:
-            id: ChangeDataUserRequest
-            properties:
-              name:
-                type: string
-                description: Новое имя пользователя
-              image:
-                type: string
-                description: Новое фото пользователя
-              phone:
-                type: string
-                description: Новый телефон пользователя
-              birthday:
-                type: string
-                description: Новая дата рождения пользователя в формате "гггг-мм-дд"
-              weight:
-                type: integer
-                description: Новый вес пользователя (для админов нет)
+        - name: image
+          in: formData
+          description: Новое фото профиля
+          required: false
+          type: file
+          format: binary
+        - name: name
+          in: formData
+          type: string
+          required: false
+          description: Новое имя пользователя
+        - name: birthday
+          in: formData
+          type: string
+          required: false
+          description: Новая дата рождения
+        - name: weight
+          in: formData
+          type: number
+          format: float
+          required: false
+          description: Новый вес
+        - name: phone
+          in: formData
+          type: string
+          required: false
+          description: Новый телефон
       responses:
         200:
           description: Успешный запрос

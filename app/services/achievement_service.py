@@ -1,8 +1,9 @@
-import base64
 import os
 
+from app.config import FOLDER_ACHIEVEMENTS
 from app.models.achievement.controller import AchievementController
 from app.models.activity.controller import ActivityController
+from app.services.image_service import uploaded_file
 
 
 class AchievementService:
@@ -21,21 +22,18 @@ class AchievementService:
 
         total_distance = sum(activity.distance_in_meters for activity in activities) / 1000
 
-        def has_achievement(achievements_list, achievement_name):
-            return any(achievement.name == achievement_name for achievement in achievements_list)
-
         for name, threshold in AchievementService.ACHIEVEMENT_THRESHOLDS.items():
-            if total_distance >= threshold and not has_achievement(achievements, name):
-                with open(os.path.join('app', 'models', 'achievement', 'achievements',
-                                       f'achievement_{threshold}.jpg'), 'rb') as image_file:
-                    image_binary = image_file.read()
-
-                image_base64 = base64.b64encode(image_binary).decode('utf-8')
+            if total_distance >= threshold and not AchievementService.has_achievement(achievements, name):
+                achievement_image_path = os.path.join(FOLDER_ACHIEVEMENTS, f'achievement_{threshold}.jpg')
 
                 data = {
                     "name": name,
-                    "image": image_base64,
+                    "image": uploaded_file(achievement_image_path, 'images/achievements'),
                     "distance": threshold,
                     "user_id": user_id
                 }
                 AchievementController.create(data)
+
+    @staticmethod
+    def has_achievement(achievements_list, achievement_name):
+        return any(achievement.name == achievement_name for achievement in achievements_list)
