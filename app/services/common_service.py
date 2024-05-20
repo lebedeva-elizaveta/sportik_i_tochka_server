@@ -1,6 +1,7 @@
 from app.database import db
 
 from app.services.entity_service import EntityService
+from app.services.image_service import uploaded_file
 
 
 class CommonService:
@@ -12,7 +13,7 @@ class CommonService:
         response = {
             "id": entity.id,
             "name": entity.name,
-            "image": entity.avatar,
+            "image": uploaded_file(entity.avatar, 'images/avatars/'),
             "phone": entity.phone,
             "birthday": entity.birthday,
         }
@@ -26,7 +27,7 @@ class CommonService:
         entity = EntityService.find_entity_by_role(entity_id, role)
 
         entity.name = personal_data.get('name', entity.name)
-        entity.avatar = personal_data.get('image', entity.avatar)
+        entity.avatar = personal_data.get('avatar', entity.avatar)
         entity.phone = personal_data.get('phone', entity.phone)
         entity.birthday = personal_data.get('birthday', entity.birthday)
         if hasattr(entity, "weight"):

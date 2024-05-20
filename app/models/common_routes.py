@@ -1,6 +1,7 @@
 from flask import request, Blueprint, jsonify
 from marshmallow import ValidationError
 
+from app.config import FOLDER_AVATARS
 from app.decorators import check_authorization
 from app.exceptions.exceptions import NotFoundException
 from app.models.admin.controller import AdminController
@@ -9,6 +10,7 @@ from app.models.common_schemas import EntityDataSchema, LoginResponseSchema, Log
 from app.models.user.controller import UserController
 from app.models.user.schemas import UserDataForRatingSchema
 from app.services.authorization_service import AuthorizationService
+from app.services.image_service import save_image
 
 api_bp = Blueprint('api', __name__)
 
@@ -51,7 +53,14 @@ def change_current_data(access_token, **kwargs):
     """
     Меняем данные пользователя
     """
-    user_data = request.json
+    file = request.files['image']
+    user_data = {
+        "name": request.form.get('name'),
+        "birthday": request.form.get('birthday'),
+        "phone": request.form.get('phone'),
+        "weight": int(request.form.get('weight')),
+        "avatar": save_image(file, FOLDER_AVATARS)
+    }
     response, status = BaseController.change_entity_data(access_token, user_data)
     return jsonify(response), status
 

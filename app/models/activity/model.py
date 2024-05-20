@@ -11,7 +11,7 @@ class Activity(db.Model):
     calories_burned = db.Column(db.Integer, nullable=False)
     avg_speed = db.Column(db.Float, nullable=False)
     date = db.Column(db.Date, nullable=False)
-    image = db.Column(db.Text, nullable=False)
+    image = db.Column(db.String, nullable=False)
     activity_type = db.Column(Enum(ActivityType), nullable=False)
 
     user = db.relationship('User', backref=db.backref('activities', lazy='dynamic'))

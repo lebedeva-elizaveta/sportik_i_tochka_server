@@ -1,10 +1,12 @@
 from flask import request, jsonify, Blueprint
 from marshmallow import ValidationError
 
+from app.config import FOLDER_AVATARS
 from app.decorators import check_authorization, check_role_admin, check_unique_email
 from app.models.admin.controller import AdminController
 from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema, AdminProfileSchema
 from app.models.user.schemas import PremiumStatisticsSchema
+from app.services.image_service import save_image
 
 api_admin_bp = Blueprint('admin', __name__)
 
@@ -15,9 +17,15 @@ def register_admin():
     """
     Зарегистрироваться от лица админа
     """
-    email = request.headers.get('email')
-    register_data = request.json
-    register_data['email'] = email
+    file = request.files['avatar']
+    register_data = {
+        "email": request.headers.get('email'),
+        "password_hash": request.form.get('password_hash'),
+        "name": request.form.get('name'),
+        "birthday": request.form.get('birthday'),
+        "phone": request.form.get('phone'),
+        "avatar": save_image(file, FOLDER_AVATARS)
+    }
     response, status = AdminController.register_new_admin(register_data)
     return jsonify(response), status
 

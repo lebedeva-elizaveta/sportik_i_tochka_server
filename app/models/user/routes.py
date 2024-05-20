@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
+from app.config import FOLDER_AVATARS
 from app.decorators import check_authorization, check_role_user, check_unique_email
 from app.models.achievement.schemas import AchievementListSchema
 from app.models.user.controller import UserController
 from app.models.user.schemas import UserProfileSchema, UserStatisticsSchema, PremiumStatisticsSchema
+from app.services.image_service import save_image
 
 api_user_bp = Blueprint('user', __name__)
 
@@ -15,9 +17,16 @@ def register_user():
     """
     Регистрация от лица обычного пользователя
     """
-    email = request.headers.get('email')
-    register_data = request.json
-    register_data['email'] = email
+    file = request.files['avatar']
+    register_data = {
+        "email": request.headers.get('email'),
+        "password_hash": request.form.get('password_hash'),
+        "name": request.form.get('name'),
+        "birthday": request.form.get('birthday'),
+        "phone": request.form.get('phone'),
+        "weight": int(request.form.get('weight')),
+        "avatar": save_image(file, FOLDER_AVATARS)
+    }
     response, status = UserController.register_new_user(register_data)
     return jsonify(response), status
 
@@ -32,13 +41,8 @@ def get_user_profile(user_id, **kwargs):
     period = request.args.get('period')
     response, status = UserController.get_profile_data(user_id, period)
     try:
-        response = {
-            "name": response["name"],
-            "image": response["image"],
-            "rating": response["rating"],
-            "statistics": UserStatisticsSchema().dump(response["statistics"]),
-            "achievements": AchievementListSchema().dump({"achievements": response["achievements"]})["achievements"]
-        }
+        response["statistics"] = UserStatisticsSchema().dump(response["statistics"])
+        response["achievements"] = AchievementListSchema().dump({"achievements": response["achievements"]})["achievements"]
     except ValidationError:
         raise
     try:

@@ -9,6 +9,7 @@ from app.models.achievement.controller import AchievementController
 from app.models.achievement.schemas import AchievementListSchema
 from app.models.activity.model import Activity
 from app.models.premium.controller import PremiumController
+from app.services.image_service import uploaded_file
 from app.services.statistics_service import StatisticsService
 
 moscow_tz = pytz.timezone('Europe/Moscow')
@@ -33,11 +34,10 @@ class UserService:
         total_activities_count = UserService.get_user_distance(user.id)
         statistics = StatisticsService.user_statistics_count(user.id, "all_time")
         average_statistics = StatisticsService.user_average_statistics(user.id, total_activities_count)
-
         user_data = {
             "id": user.id,
             "name": user.name,
-            "image": user.avatar,
+            "image": uploaded_file(user.avatar, 'images/avatars') if user.avatar is not None else None,
             "role": role,
             "is_blocked": user.is_blocked,
             "total_activities_count": total_activities_count,

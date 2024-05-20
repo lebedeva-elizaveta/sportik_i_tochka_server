@@ -4,6 +4,7 @@ from app.exceptions.exceptions import NotFoundException
 from app.models.activity.model import Activity
 from app.database import db
 from app.models.activity.schemas import ActivitySchema
+from app.services.image_service import uploaded_file
 
 
 class ActivityController:
@@ -18,7 +19,7 @@ class ActivityController:
     def create(cls, data):
         try:
             validated_data = ActivitySchema().load(data)
-        except ValidationError as ve:
+        except ValidationError:
             raise
         new_activity = cls.model(**validated_data)
         db.session.add(new_activity)
@@ -41,20 +42,19 @@ class ActivityController:
     def add_activity(activity_data):
         new_activity = ActivityController.create(activity_data)
         return {
-            "success": True,
-            "activity_id": new_activity.id
-        }, 201
+                   "success": True,
+                   "activity_id": new_activity.id
+               }, 201
 
     @staticmethod
     def get_activities(user_id):
         user_activities = ActivityController.get_by_user_id(user_id)
         if not user_activities:
             return {
-                "success": True,
-                "message": "No activities yet"
-            }, 200
-
-        return {
-            "success": True,
-            "activities": user_activities
-        }, 200
+                       "success": True,
+                       "message": "No activities yet"
+                   }, 200
+        else:
+            for activity in user_activities:
+                activity.image = uploaded_file(activity.image, 'images/activities')
+            return user_activities, 200
