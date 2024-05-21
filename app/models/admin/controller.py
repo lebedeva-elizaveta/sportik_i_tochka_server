@@ -47,7 +47,7 @@ class AdminController(BaseController):
         admin = cls.get_by_id(admin_id)
         response = {
             "name": admin.name,
-            "image": uploaded_file(admin.avatar,'images/avatars/')
+            "image": uploaded_file(admin.avatar, 'images/avatars/')
         }
         return response, 200
 

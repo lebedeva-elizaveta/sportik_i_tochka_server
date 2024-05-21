@@ -24,7 +24,7 @@ def register_admin():
         "name": request.form.get('name'),
         "birthday": request.form.get('birthday'),
         "phone": request.form.get('phone'),
-        "avatar": save_image(file, FOLDER_AVATARS)
+        "avatar": save_image(file, FOLDER_AVATARS) if file else None
     }
     response, status = AdminController.register_new_admin(register_data)
     return jsonify(response), status

@@ -25,7 +25,7 @@ def register_user():
         "birthday": request.form.get('birthday'),
         "phone": request.form.get('phone'),
         "weight": int(request.form.get('weight')),
-        "avatar": save_image(file, FOLDER_AVATARS)
+        "avatar": save_image(file, FOLDER_AVATARS) if file else None
     }
     response, status = UserController.register_new_user(register_data)
     return jsonify(response), status
