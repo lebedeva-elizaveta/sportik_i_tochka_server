@@ -29,6 +29,8 @@ def save_image(file, upload_folder):
 
 
 def uploaded_file(file_path, folder):
+    if file_path is None:
+        return None
     filename = os.path.basename(file_path)
     return url_for('static', filename=f"{folder}/{filename}")
 

@@ -248,7 +248,6 @@ paths:
           description: The uploaded file data
           required: false
           type: file
-          format: binary
         - name: name
           in: formData
           type: string
@@ -318,7 +317,6 @@ paths:
           description: The uploaded file data
           required: false
           type: file
-          format: binary
         - name: name
           in: formData
           type: string
@@ -439,7 +437,6 @@ paths:
           description: The uploaded file data
           required: true
           type: file
-          format: binary
         - name: activity_type
           in: formData
           required: true
@@ -868,7 +865,6 @@ paths:
           description: Новое фото профиля
           required: false
           type: file
-          format: binary
         - name: name
           in: formData
           type: string
