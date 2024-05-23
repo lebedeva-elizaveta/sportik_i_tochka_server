@@ -2,7 +2,7 @@ from app.models.admin.model import Admin
 from app.models.admin.schemas import AdminCreate
 from app.models.base_controller import BaseController
 from app.services.admin_service import AdminService
-from app.services.image_service import uploaded_file
+from app.services.image_service import ImageService
 from app.services.security_service import EncryptionService
 from app.services.statistics_service import StatisticsService
 
@@ -47,7 +47,7 @@ class AdminController(BaseController):
         admin = cls.get_by_id(admin_id)
         response = {
             "name": admin.name,
-            "image": uploaded_file(admin.avatar, 'images/avatars/')
+            "image": ImageService.get_uploaded_file_url(admin.avatar, 'avatars')
         }
         return response, 200
 

@@ -6,7 +6,7 @@ from app.models.base_controller import BaseController
 from app.models.premium.controller import PremiumController
 from app.models.user.model import User
 from app.models.user.schemas import UserCreate
-from app.services.image_service import uploaded_file
+from app.services.image_service import ImageService
 from app.services.security_service import EncryptionService
 from app.services.statistics_service import StatisticsService
 from app.services.user_service import UserService
@@ -62,7 +62,7 @@ class UserController(BaseController):
 
         response = {
             "name": user.name,
-            "image": uploaded_file(user.avatar, 'images/avatars/'),
+            "image": ImageService.get_uploaded_file_url(user.avatar, 'avatars'),
             "statistics": statistics,
             "achievements": achievements,
             "rating": user_rating

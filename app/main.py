@@ -11,6 +11,7 @@ from app.exceptions.error_handlers import handle_invalid_token_exception, handle
 from app.exceptions.exceptions import InvalidTokenException, NotFoundException, InvalidRoleException, \
     ActionIsNotAvailableException, InvalidActionException, AlreadyExistsException, InvalidPasswordException, \
     UnprocessableEntityException
+from app.file_controller import file_bp
 from app.models.activity.routes import api_activity_bp
 from app.models.admin.routes import api_admin_bp
 from app.models.premium.routes import api_premium_bp
@@ -35,6 +36,7 @@ app.register_blueprint(api_admin_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(api_activity_bp)
 app.register_blueprint(api_premium_bp)
+app.register_blueprint(file_bp)
 
 migrate = Migrate(app, db)
 
