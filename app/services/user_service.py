@@ -37,7 +37,7 @@ class UserService:
         user_data = {
             "id": user.id,
             "name": user.name,
-            "image": ImageService.get_static_file_url(user.avatar, 'avatars') if user.avatar is not None else None,
+            "image": ImageService.get_uploaded_file_url(user.avatar, 'avatars') if user.avatar is not None else None,
             "role": role,
             "is_blocked": user.is_blocked,
             "total_activities_count": total_activities_count,
