@@ -4,7 +4,7 @@ from app.exceptions.exceptions import NotFoundException
 from app.models.activity.model import Activity
 from app.database import db
 from app.models.activity.schemas import ActivitySchema
-from app.services.image_service import uploaded_file
+from app.services.image_service import ImageService
 
 
 class ActivityController:
@@ -56,5 +56,5 @@ class ActivityController:
                    }, 200
         else:
             for activity in user_activities:
-                activity.image = uploaded_file(activity.image, 'images/activities')
+                activity.image = ImageService.get_uploaded_file_url(activity.image, 'activities')
             return user_activities, 200

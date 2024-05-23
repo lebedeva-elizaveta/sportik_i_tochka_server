@@ -9,7 +9,7 @@ from app.models.achievement.controller import AchievementController
 from app.models.achievement.schemas import AchievementListSchema
 from app.models.activity.model import Activity
 from app.models.premium.controller import PremiumController
-from app.services.image_service import uploaded_file
+from app.services.image_service import ImageService
 from app.services.statistics_service import StatisticsService
 
 moscow_tz = pytz.timezone('Europe/Moscow')
@@ -37,7 +37,7 @@ class UserService:
         user_data = {
             "id": user.id,
             "name": user.name,
-            "image": uploaded_file(user.avatar, 'images/avatars') if user.avatar is not None else None,
+            "image": ImageService.get_static_file_url(user.avatar, 'avatars') if user.avatar is not None else None,
             "role": role,
             "is_blocked": user.is_blocked,
             "total_activities_count": total_activities_count,

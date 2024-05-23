@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
-from app.config import FOLDER_ACTIVITIES
+from app.config import AppConfig
 from app.models.activity.controller import ActivityController
 from app.models.activity.schemas import ActivitySchema
 from app.decorators import check_authorization, check_role_user
 from app.services.achievement_service import AchievementService
-from app.services.image_service import save_image
+from app.services.image_service import ImageService
 
 api_activity_bp = Blueprint('activity', __name__)
 
@@ -25,7 +25,7 @@ def add_activity(user_id, **kwargs):
                      "distance_in_meters": int(request.form.get("distance_in_meters")),
                      "duration": int(request.form.get("duration")),
                      "calories_burned": int(request.form.get("calories_burned")),
-                     "image": save_image(file, FOLDER_ACTIVITIES),
+                     "image": ImageService.save_image(file, AppConfig.FOLDER_ACTIVITIES),
                      "user_id": user_id}
     response, status = ActivityController.add_activity(activity_data)
     AchievementService.get_achievement(user_id)

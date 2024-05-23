@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
-from app.config import FOLDER_AVATARS
+from app.config import AppConfig
 from app.decorators import check_authorization, check_role_user, check_unique_email
 from app.models.achievement.schemas import AchievementListSchema
 from app.models.user.controller import UserController
 from app.models.user.schemas import UserProfileSchema, UserStatisticsSchema, PremiumStatisticsSchema
-from app.services.image_service import save_image
+from app.services.image_service import ImageService
 
 api_user_bp = Blueprint('user', __name__)
 
@@ -25,7 +25,7 @@ def register_user():
         "birthday": request.form.get('birthday'),
         "phone": request.form.get('phone'),
         "weight": int(request.form.get('weight')),
-        "avatar": save_image(file, FOLDER_AVATARS) if file else None
+        "avatar": ImageService.save_image(file, AppConfig.FOLDER_AVATARS) if file else None
     }
     response, status = UserController.register_new_user(register_data)
     return jsonify(response), status

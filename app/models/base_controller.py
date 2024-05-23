@@ -5,8 +5,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from marshmallow import ValidationError
 
-
-from app.config import settings, ALGORITHM
+from app.config import AppConfig, settings
 from app.database import db
 from app.exceptions.exceptions import NotFoundException, InvalidTokenException, UnprocessableEntityException
 from app.services.common_service import CommonService
@@ -72,7 +71,7 @@ class BaseController:
         role = self.get_role()
         access_token = jwt.encode(payload={'sub': self.db_entity.id, 'role': role},
                                   key=settings.secret_key,
-                                  algorithm=ALGORITHM)
+                                  algorithm=AppConfig.ALGORITHM)
         return access_token
 
     @staticmethod
@@ -95,7 +94,7 @@ class BaseController:
         token = access_token.replace('Bearer ', '').strip()
 
         try:
-            jwt.decode(token, key=settings.secret_key, algorithms=ALGORITHM)
+            jwt.decode(token, key=settings.secret_key, algorithms=AppConfig.ALGORITHM)
         except jwt.DecodeError:
             raise InvalidTokenException("Invalid token format")
         except jwt.InvalidTokenError:
@@ -107,7 +106,7 @@ class BaseController:
         if BaseController.is_access_token_valid(access_token):
             clear_token = access_token.replace('Bearer ', '')
 
-            payload = jwt.decode(jwt=clear_token, key=settings.secret_key, algorithms=[ALGORITHM])
+            payload = jwt.decode(jwt=clear_token, key=settings.secret_key, algorithms=[AppConfig.ALGORITHM])
 
             return payload
 

@@ -1,9 +1,9 @@
 import os
 
-from app.config import FOLDER_ACHIEVEMENTS
+from app.config import AppConfig
 from app.models.achievement.controller import AchievementController
 from app.models.activity.controller import ActivityController
-from app.services.image_service import uploaded_file
+from app.services.image_service import ImageService
 
 
 class AchievementService:
@@ -24,11 +24,11 @@ class AchievementService:
 
         for name, threshold in AchievementService.ACHIEVEMENT_THRESHOLDS.items():
             if total_distance >= threshold and not AchievementService.has_achievement(achievements, name):
-                achievement_image_path = os.path.join(FOLDER_ACHIEVEMENTS, f'achievement_{threshold}.jpg')
+                achievement_image_path = os.path.join(AppConfig.FOLDER_ACHIEVEMENTS, f'achievement_{threshold}.jpg')
 
                 data = {
                     "name": name,
-                    "image": uploaded_file(achievement_image_path, 'images/achievements'),
+                    "image": ImageService.get_static_file_url(achievement_image_path, 'achievements'),
                     "distance": threshold,
                     "user_id": user_id
                 }
