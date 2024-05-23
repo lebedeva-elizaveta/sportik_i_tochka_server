@@ -12,3 +12,4 @@ pydantic-settings~=2.2.1
 marshmallow-enum~=1.5.1
 Flask-APScheduler~=1.13.1
 pillow~=10.3.0
+gunicorn~=22.0.0
