@@ -51,6 +51,18 @@ services:
     depends_on:
       - db
 
+  nginx:
+    build: ./nginx
+    volumes:
+      - /etc/letsencrypt/live/sportik-i.ru/fullchain.pem:/etc/nginx/certs/fullchain.pem
+      - /etc/letsencrypt/live/sportik-i.ru/privkey.pem:/etc/nginx/certs/privkey.pem
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
   pgadmin-data:
