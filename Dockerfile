@@ -19,11 +19,5 @@ RUN pip install -r requirements.txt
 # Copy project
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p app/uploads/activities app/static/achievements app/uploads/avatars
-
-# Ensure /var/tmp is writable
-RUN mkdir -p /var/tmp && chmod 777 /var/tmp
-
 # Set the environment variable for Gunicorn temporary files
 ENV TMPDIR=/var/tmp
