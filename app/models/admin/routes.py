@@ -4,8 +4,8 @@ from marshmallow import ValidationError
 from app.config import AppConfig
 from app.decorators import check_authorization, check_role_admin, check_unique_email
 from app.models.admin.controller import AdminController
-from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema, AdminProfileSchema
-from app.models.user.schemas import PremiumStatisticsSchema
+from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema, AdminProfileSchema, \
+    AdminStatisticsSchema
 from app.services.image_service import ImageService
 
 api_admin_bp = Blueprint('admin', __name__)
@@ -78,5 +78,5 @@ def admin_route_statistics(**kwargs):
     """
     period = request.args.get('period')
     response, status = AdminController.get_admin_statistics(period)
-    serialized_response = PremiumStatisticsSchema().dump(response)
+    serialized_response = AdminStatisticsSchema().dump(response)
     return jsonify(serialized_response), status
