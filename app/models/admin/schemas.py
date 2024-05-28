@@ -31,6 +31,6 @@ class AdminGraphData(Schema):
 
 
 class AdminStatisticsSchema(Schema):
-    total_users = fields.Int(required=True),
-    premium_users = fields.Int(required=True),
+    total_users = fields.Int(required=True)
+    premium_users = fields.Int(required=True)
     graph_data = fields.List(fields.Nested(AdminGraphData()))

@@ -78,5 +78,5 @@ def admin_route_statistics(**kwargs):
     """
     period = request.args.get('period')
     response, status = AdminController.get_admin_statistics(period)
-    serialized_response = AdminStatisticsSchema().dump(response)
-    return jsonify(serialized_response), status
+    response = AdminStatisticsSchema().dump(response)
+    return jsonify(response), status
