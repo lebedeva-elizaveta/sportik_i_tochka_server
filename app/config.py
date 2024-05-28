@@ -16,9 +16,9 @@ class AppConfig:
     ALGORITHM = "HS256"
     ALLOWED_EXTENSIONS = {'PNG', 'JPG', 'JPEG'}
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
-    FOLDER_ACTIVITIES = 'app/uploads/activities/'
+    FOLDER_ACTIVITIES = 'uploads/activities/'
     FOLDER_ACHIEVEMENTS = 'app/static/achievements/'
-    FOLDER_AVATARS = 'app/uploads/avatars/'
+    FOLDER_AVATARS = 'uploads/avatars/'
 
     upload_folders = [
         FOLDER_ACTIVITIES,
