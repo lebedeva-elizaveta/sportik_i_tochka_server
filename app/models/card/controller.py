@@ -22,6 +22,7 @@ class CardController:
         new_card = cls.model(**data)
         db.session.add(new_card)
         db.session.commit()
+        db.session.rollback()
         return new_card
 
     @classmethod
@@ -36,7 +37,7 @@ class CardController:
         card = cls.model.query.filter_by(card_number=card_number).first()
         if card:
             return card
-        return False
+        return None
 
     @classmethod
     def user_card_exists(cls, card_number, user_id):
@@ -47,32 +48,33 @@ class CardController:
         return False
 
     @staticmethod
-    def is_card_available(user_id, card_data):
+    def add_card(user_id, card_data):
         encrypted_data = EncryptionService.encrypt_card_data(card_data)
         card_number = encrypted_data.get("card_number")
-        card_id = CardController.card_exists(card_number)
-        if card_id:
+        card = CardController.card_exists(card_number)
+        if card is not None:
             if CardController.user_card_exists(card_number, user_id):
                 return True
-            CardController._add_user_card_data(user_id, card_id)
+            CardController._add_user_card_data(user_id, card)
         else:
             try:
                 validate_data = EncryptedCardSchema().load(encrypted_data)
             except ValidationError:
                 raise
             new_card = CardController.create(validate_data)
-            CardController._add_user_card_data(user_id, new_card.id)
+            CardController._add_user_card_data(user_id, new_card)
             return True
         return False
 
     @classmethod
-    def _add_user_card_data(cls, user_id, card_id):
+    def _add_user_card_data(cls, user_id, card):
         user = User.query.get(user_id)
-        card = cls.model.query.get(card_id)
         if not user:
             raise NotFoundException("User not found")
         if not card:
             raise NotFoundException("card not found")
-        user_card_data = User_Card(user_id=user_id, card_id=card_id)
+        user_card_data = User_Card(user_id=user_id, card_id=card.id)
         db.session.add(user_card_data)
         db.session.commit()
+        db.session.rollback()
+        db.session.expunge(user_card_data)

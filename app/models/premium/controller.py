@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytz
 
-from app.exceptions.exceptions import NotFoundException, InvalidActionException, ActionIsNotAvailableException
+from app.exceptions.exceptions import NotFoundException, ActionIsNotAvailableException
 from app.models.card.controller import CardController
 from app.models.premium.model import Premium, Premium_Award
 from app.database import db
@@ -66,9 +66,7 @@ class PremiumController:
         if PremiumController.is_active(user_id):
             raise ActionIsNotAvailableException("User is already premium")
         if not card_data.get("card_id"):
-            is_premium_available = CardController.is_card_available(user_id, card_data)
-            if not is_premium_available:
-                raise InvalidActionException("Invalid action")
+            CardController.add_card(user_id, card_data)
         new_premium = PremiumController.create(user_id)
         result = {
             "success": True,
