@@ -7,9 +7,9 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./app/uploads/activities:/app/uploads/activities
+      - ./uploads/activities:/app/uploads/activities
       - ./app/static/achievements:/app/static/achievements
-      - ./app/uploads/avatars:/app/uploads/avatars
+      - ./uploads/avatars:/app/uploads/avatars
       - /var/tmp:/var/tmp
     environment:
       - DATABASE_URL=${DATABASE_URL}

@@ -70,4 +70,5 @@ class StaticFileUrlBuilder(FileUrlBuilder):
 
 class UploadedFileUrlBuilder(FileUrlBuilder):
     def build_url(self, filename):
+        filename = os.path.basename(filename)
         return url_for('file_bp.uploaded_file', folder=self.folder, filename=filename)
