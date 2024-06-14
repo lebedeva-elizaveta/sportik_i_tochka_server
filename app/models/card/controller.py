@@ -28,9 +28,24 @@ class CardController:
     @classmethod
     def get_user_cards(cls, user_id):
         user_cards = cls.model.query.join(User_Card).filter(User_Card.user_id == user_id).all()
-        card_numbers = [EncryptionService.decrypt_card_number(card.card_number) for card in user_cards]
-        card_ids = [card.id for card in user_cards]
-        return card_numbers, card_ids, 200
+        if not user_cards:
+            return {
+                "success": True,
+                "message": "No cards yet"
+            }
+
+        decrypted_cards = []
+        for card in user_cards:
+            decrypted_card = {
+                'card_name': card.card_name,
+                'card_number': EncryptionService.decrypt_data(card.card_number),
+                'month': EncryptionService.decrypt_data(card.month),
+                'year': EncryptionService.decrypt_data(card.year),
+                'cvv': EncryptionService.decrypt_data(card.cvv),
+            }
+            decrypted_cards.append(decrypted_card)
+
+        return decrypted_cards, 200
 
     @classmethod
     def card_exists(cls, card_number):

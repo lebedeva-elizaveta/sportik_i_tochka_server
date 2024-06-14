@@ -65,8 +65,7 @@ class PremiumController:
     def buy_premium(user_id, card_data):
         if PremiumController.is_active(user_id):
             raise ActionIsNotAvailableException("User is already premium")
-        if not card_data.get("card_id"):
-            CardController.add_card(user_id, card_data)
+        CardController.add_card(user_id, card_data)
         new_premium = PremiumController.create(user_id)
         result = {
             "success": True,

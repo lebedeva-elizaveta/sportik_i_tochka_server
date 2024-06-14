@@ -47,10 +47,6 @@ def get_current_data(access_token, **kwargs):
     return jsonify(serialized_response), status
 
 
-class UpdateUserDataSchema:
-    pass
-
-
 @api_bp.route('/data', methods=['PUT'])
 @check_authorization
 def change_current_data(access_token, **kwargs):
