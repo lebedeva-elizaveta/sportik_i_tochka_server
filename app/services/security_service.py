@@ -71,8 +71,8 @@ class EncryptionService:
         return unpadded_data
 
     @staticmethod
-    def decrypt_card_number(encrypted_card_number):
+    def decrypt_data(encrypted_card_data):
         decrypted_card_number = EncryptionService._decrypt_data(
-            settings.aes_key, settings.aes_iv, bytes.fromhex(encrypted_card_number)
+            settings.aes_key, settings.aes_iv, bytes.fromhex(encrypted_card_data)
         ).decode()
         return decrypted_card_number
