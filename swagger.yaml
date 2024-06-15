@@ -47,6 +47,30 @@ components:
         error:
           type: string
           description: "Описание ошибки"
+    card_data:
+      type: object
+      required:
+        - card_name
+        - card_number
+        - month
+        - year
+        - cvv
+      properties:
+        card_name:
+          type: string
+          description: Имя карты
+        card_number:
+          type: string
+          description: Номер карты
+        month:
+          type: integer
+          description: Месяц срока действия
+        year:
+          type: integer
+          description: Год срока действия
+        cvv:
+          type: integer
+          description: CVV карты
     graph_data:
       type: object
       required:
@@ -705,16 +729,9 @@ paths:
         200:
           description: Успешно
           schema:
-              type: object
-              properties:
-                card_numbers:
-                  type: array
-                  items:
-                    type: string
-                card_ids:
-                  type: array
-                  items:
-                    type: integer
+              type: array
+              items:
+                $ref: '#/components/schemas/card_data'
         401:
           description: Токен некорректный
           schema:
@@ -744,23 +761,8 @@ paths:
           in: body
           required: true
           schema:
-            id: BuyPremiumRequest
-            properties:
-              card_name:
-                type: string
-                description: Имя карты
-              card_number:
-                type: string
-                description: Номер карты
-              month:
-                type: integer
-                description: Месяц срока действия
-              year:
-                type: integer
-                description: Год срока действия
-              cvv:
-                type: integer
-                description: CVV карты
+            type: object
+            $ref: '#/components/schemas/card_data'
       responses:
         201:
           description: Успешная покупка премиума
