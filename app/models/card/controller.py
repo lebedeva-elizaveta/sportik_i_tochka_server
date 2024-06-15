@@ -32,7 +32,7 @@ class CardController:
             return {
                 "success": True,
                 "message": "No cards yet"
-            }
+            }, 200
 
         decrypted_cards = []
         for card in user_cards:
