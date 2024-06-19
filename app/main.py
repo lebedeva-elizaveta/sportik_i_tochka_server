@@ -19,14 +19,22 @@ from app.models.common_routes import api_bp
 from app.models.user.routes import api_user_bp
 from app.database import db
 from app.models.user.controller import UserController
+from app.services.mail_service import mail
 
 app = Flask(__name__)
-
 
 UserController.scheduler.init_app(app)
 UserController.scheduler.start()
 
+app.config['SECRET_KEY'] = settings.secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = settings.database_url
+app.config['MAIL_SERVER'] = settings.mail_server
+app.config['MAIL_PORT'] = settings.mail_port
+app.config['MAIL_USERNAME'] = settings.mail_username
+app.config['MAIL_PASSWORD'] = settings.mail_password
+app.config['MAIL_USE_TLS'] = settings.mail_use_tls
+
+mail.init_app(app)
 db.init_app(app)
 
 swagger = Swagger(app, template_file='../swagger.yaml')
@@ -37,6 +45,7 @@ app.register_blueprint(api_bp)
 app.register_blueprint(api_activity_bp)
 app.register_blueprint(api_premium_bp)
 app.register_blueprint(file_bp)
+# app.register_blueprint(email_bp)
 
 migrate = Migrate(app, db)
 
@@ -50,6 +59,7 @@ app.register_error_handler(InvalidActionException, handle_invalid_action_excepti
 app.register_error_handler(AlreadyExistsException, handle_already_exists_exception)
 app.register_error_handler(InvalidPasswordException, handle_invalid_password_exception)
 app.register_error_handler(UnprocessableEntityException, handle_unprocessable_entity)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
