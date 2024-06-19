@@ -1,4 +1,4 @@
-from flask import request, Blueprint, jsonify, session
+from flask import request, Blueprint, jsonify
 from marshmallow import ValidationError
 
 from app.config import AppConfig
@@ -86,10 +86,10 @@ def get_rating(**kwargs):
     return jsonify(serialized_response), status
 
 
-@api_bp.route('/password', methods=['POST'])
-def change_password():
+@api_bp.route('/password/send-email', methods=['POST'])
+def sending_email():
     """
-    Восстановить пароль
+    Отправить подтверждающее письмо на email
     """
     email = request.headers.get("email")
     user = UserController.get_by_email(email)
@@ -97,41 +97,41 @@ def change_password():
         admin = AdminController.get_by_email(email)
         if not admin:
             raise NotFoundException("User not found")
-        session['admin_email'] = email
-    session['user_email'] = email
-    confirmation_code = send_email(email)
-    session['confirmation_code'] = confirmation_code
+    code_sent = send_email(email)
     return jsonify({
-        "message": "Code sent to email"
+        "message": "Code sent to email",
+        "code_sent": code_sent
     }), 200
 
 
-@api_bp.route('/password/confirm', methods=['POST'])
+@api_bp.route('/password/get-code', methods=['POST'])
 def confirm_code():
+    """
+    Ввести код подтверждения
+    """
     data = request.json
-    new_code = data.get('confirmation_code')
-    stored_code = session.get('confirmation_code')
-    if new_code == stored_code:
-        session.pop('confirmation_code', None)
+    code_sent = data.get('code_sent')
+    received_code = data.get('received_code')
+    if received_code == code_sent:
         return jsonify({
             "success": True
         }), 200
     else:
-        session.pop('confirmation_code', None)
         raise InvalidRoleException("Отказано в доступе")
 
 
 @api_bp.route('/password/change', methods=['PUT'])
-def get_new_password():
-    user_email = session.get('user_email')
-    admin_email = session.get('admin_email')
+def change_password():
+    """
+    Поменять пароль
+    """
+    email = request.headers.get("email")
+    user = UserController.get_by_email(email)
     data = request.json
-    new_password = data.get("new_password", "")
-    confirm_password = data.get("confirm_password", "")
-    if user_email is not None:
-        response, status = UserController.change_password(user_email, new_password, confirm_password)
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+    if user:
+        response, status = UserController.change_password(email, new_password, confirm_password)
     else:
-        response, status = AdminController.change_password(admin_email, new_password, confirm_password)
-    session.pop('user', None)
-    session.pop('admin', None)
+        response, status = AdminController.change_password(email, new_password, confirm_password)
     return jsonify(response), status
