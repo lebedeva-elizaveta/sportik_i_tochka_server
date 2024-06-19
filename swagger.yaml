@@ -1209,8 +1209,8 @@ paths:
           schema:
             id: MailResponse
             properties:
-              success:
-                type: boolean
+              message:
+                type: string
                 description: Сообщение отправлено на email
         404:
           description: Ошибка, если пользователь не найден

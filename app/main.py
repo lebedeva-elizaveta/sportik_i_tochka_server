@@ -45,7 +45,6 @@ app.register_blueprint(api_bp)
 app.register_blueprint(api_activity_bp)
 app.register_blueprint(api_premium_bp)
 app.register_blueprint(file_bp)
-# app.register_blueprint(email_bp)
 
 migrate = Migrate(app, db)
 
