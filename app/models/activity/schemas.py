@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields, validate
 from marshmallow_enum import EnumField
+
 from app.models.activity.model import ActivityType
 
 
@@ -13,7 +14,3 @@ class ActivitySchema(Schema):
     date = fields.Date(required=True)
     image = fields.Str(required=True)
     activity_type = EnumField(ActivityType, by_value=True, required=True)
-
-
-class ActivityListSchema(Schema):
-    activities = fields.List(fields.Nested(ActivitySchema()))

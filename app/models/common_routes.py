@@ -1,10 +1,17 @@
-from flask import request, Blueprint, jsonify
-from werkzeug.exceptions import NotFound, Unauthorized
+from flask import request, Blueprint, jsonify, session
+from marshmallow import ValidationError
 
+from app.config import AppConfig
+from app.decorators import check_authorization
+from app.exceptions.exceptions import NotFoundException, InvalidRoleException
 from app.models.admin.controller import AdminController
-from app.models.base_controller import BaseUser
+from app.models.base_controller import BaseController
+from app.models.common_schemas import EntityGetSchema, LoginResponseSchema, LoginRequestSchema, EntityUpdateSchema
 from app.models.user.controller import UserController
+from app.models.user.schemas import UserDataForRatingSchema
 from app.services.authorization_service import AuthorizationService
+from app.services.image_service import ImageService
+from app.services.mail_service import send_email
 
 api_bp = Blueprint('api', __name__)
 
@@ -14,57 +21,117 @@ def login():
     """
     Логинимся за любого пользователя
     """
-    login_data = request.json
-    email = login_data.get("email")
-    password = login_data.get("password")
+    data = request.json
     try:
-        admin = AdminController.get_by_email(email)
-        return AuthorizationService.handle_admin_login(admin, password)
-    except NotFound:
-        pass
+        validated_data = LoginRequestSchema().load(data)
+    except ValidationError:
+        raise
+    response = AuthorizationService.login(validated_data)
     try:
-        user = UserController.get_by_email(email)
-        if user.is_blocked:
-            return jsonify({"success": False, "error": "USER_IS_BLOCKED"}), 404
-        return AuthorizationService.handle_user_login(user, password)
-    except NotFound:
-        pass
-    return jsonify({"success": False, "error": "USER_NOT_FOUND"}), 404
+        serialized_response = LoginResponseSchema().dump(response)
+    except ValidationError:
+        raise
+    return jsonify(serialized_response), 200
 
 
-@api_bp.route("/get_current_data", methods=["GET"])
-def get_current_data():
+@api_bp.route('/data', methods=["GET"])
+@check_authorization
+def get_current_data(access_token, **kwargs):
     """
     Получаем текущие данные пользователя
     """
+    response, status = BaseController.get_current_entity_data(access_token)
     try:
-        access_token = request.headers.get("Authorization")
-        if not access_token:
-            return jsonify({"success": False, "error": "Authorization header missing"}), 401
-        user_data = BaseUser.get_current_user_data(access_token)
-        return jsonify(user_data), 200
-    except Unauthorized as ue:
-        return jsonify({"success": False, "error": str(ue)}), 401
-    except NotFound as nf:
-        return jsonify({"success": False, "error": str(nf)}), 404
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+        serialized_response = EntityGetSchema().dump(response)
+    except ValidationError:
+        raise
+    return jsonify(serialized_response), status
 
 
-@api_bp.route('/change_current_data', methods=['PUT'])
-def change_current_data():
+@api_bp.route('/data', methods=['PUT'])
+@check_authorization
+def change_current_data(access_token, **kwargs):
     """
     Меняем данные пользователя
     """
+    file = request.files.get('image')
+    schema = EntityUpdateSchema()
     try:
-        access_token = request.headers.get("Authorization")
-        if not access_token:
-            return jsonify({"success": False, "error": "Authorization header missing"}), 401
-        user_data = request.json
-        return BaseUser.change_user_data(access_token, user_data)
-    except Unauthorized as ue:
-        return jsonify({"success": False, "error": str(ue)}), 401
-    except NotFound as nf:
-        return jsonify({"success": False, "error": str(nf)}), 404
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+        user_data = schema.load(request.form.to_dict())
+    except ValidationError:
+        raise
+    if file:
+        try:
+            avatar_path = ImageService.save_image(file, AppConfig.FOLDER_AVATARS)
+            user_data['avatar'] = avatar_path
+        except ValueError:
+            raise
+    response, status = BaseController.change_entity_data(access_token, user_data)
+    return jsonify(response), status
+
+
+@api_bp.route('/rating', methods=['GET'])
+@check_authorization
+def get_rating(**kwargs):
+    """
+    Получить рейтинг пользователей
+    """
+    response, status = UserController.get_rating()
+    try:
+        serialized_response = {
+            "users": UserDataForRatingSchema(many=True).dump(response["users"])
+        }
+    except ValidationError:
+        raise
+    return jsonify(serialized_response), status
+
+
+@api_bp.route('/password', methods=['POST'])
+def change_password():
+    """
+    Восстановить пароль
+    """
+    email = request.headers.get("email")
+    user = UserController.get_by_email(email)
+    if not user:
+        admin = AdminController.get_by_email(email)
+        if not admin:
+            raise NotFoundException("User not found")
+        session['admin_email'] = email
+    session['user_email'] = email
+    confirmation_code = send_email(email)
+    session['confirmation_code'] = confirmation_code
+    return jsonify({
+        "message": "Code sent to email"
+    }), 200
+
+
+@api_bp.route('/password/confirm', methods=['POST'])
+def confirm_code():
+    data = request.json
+    new_code = data.get('confirmation_code')
+    stored_code = session.get('confirmation_code')
+    if new_code == stored_code:
+        session.pop('confirmation_code', None)
+        return jsonify({
+            "success": True
+        }), 200
+    else:
+        session.pop('confirmation_code', None)
+        raise InvalidRoleException("Отказано в доступе")
+
+
+@api_bp.route('/password/change', methods=['PUT'])
+def get_new_password():
+    user_email = session.get('user_email')
+    admin_email = session.get('admin_email')
+    data = request.json
+    new_password = data.get("new_password", "")
+    confirm_password = data.get("confirm_password", "")
+    if user_email is not None:
+        response, status = UserController.change_password(user_email, new_password, confirm_password)
+    else:
+        response, status = AdminController.change_password(admin_email, new_password, confirm_password)
+    session.pop('user', None)
+    session.pop('admin', None)
+    return jsonify(response), status

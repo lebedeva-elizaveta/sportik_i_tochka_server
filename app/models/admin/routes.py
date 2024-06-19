@@ -1,78 +1,82 @@
 from flask import request, jsonify, Blueprint
 from marshmallow import ValidationError
+
+from app.config import AppConfig
+from app.decorators import check_authorization, check_role_admin, check_unique_email
 from app.models.admin.controller import AdminController
-from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema
-from app.services.security_service import EncryptionService
+from app.models.admin.schemas import AdminActionModifySchema, AdminGrantPremiumSchema, AdminProfileSchema, \
+    AdminStatisticsSchema
+from app.services.image_service import ImageService
 
 api_admin_bp = Blueprint('admin', __name__)
 
 
-@api_admin_bp.route('/register_admin', methods=['POST'])
+@api_admin_bp.route('/admin/register', methods=['POST'])
+@check_unique_email
 def register_admin():
     """
     Зарегистрироваться от лица админа
     """
-    email = request.headers.get('email')
-    register_data = request.json
-    try:
-        AdminController.check_email(email)
-    except Exception as e:
-        return jsonify({"success": False, "error": {e}}), 409
-    try:
-        register_data['password_hash'] = EncryptionService.generate_password_hash(register_data['password_hash'])
-        register_data['email'] = email
-        new_admin = AdminController.create(data=register_data)
-    except ValidationError as err:
-        return jsonify({"success": False, "message": f"Validation error: {err.messages}"}), 400
-    if new_admin:
-        admin_instance = AdminController(entity_id=new_admin.id)
-        access_token = admin_instance.generate_access_token()
-        return jsonify({
-            "success": True,
-            "access_token": access_token,
-            "user_id": new_admin.id
-        }), 201
-    else:
-        return jsonify({"success": False, "message": "Failed to create admin"}), 500
+    file = request.files['avatar']
+    register_data = {
+        "email": request.headers.get('email'),
+        "password_hash": request.form.get('password_hash'),
+        "name": request.form.get('name'),
+        "birthday": request.form.get('birthday'),
+        "phone": request.form.get('phone'),
+        "avatar": ImageService.save_image(file, AppConfig.FOLDER_AVATARS) if file else None
+    }
+    response, status = AdminController.register_new_admin(register_data)
+    return jsonify(response), status
 
 
-@api_admin_bp.route("/admin_actions/modify", methods=["PUT"])
-def admin_actions_put():
+@api_admin_bp.route("/admin/action", methods=["PUT"])
+@check_authorization
+@check_role_admin
+def admin_actions_put(admin_id, **kwargs):
     """
     Заблокировать/разблокировать, забрать премиум-подписку
     """
-    access_token = request.headers.get("Authorization")
-    if not access_token:
-        return jsonify({"success": False}), 401
-    admin_id = AdminController.get_id_from_access_token(access_token)
-    if not admin_id:
-        return jsonify({"success": False}), 404
-    try:
-        data = AdminActionModifySchema().load(request.json)
-        result, status = AdminController.modify_admin_action_endpoint(admin_id, data)
-        return jsonify(result), status
-    except ValidationError as ve:
-        return jsonify({"success": False, "errors": ve.messages}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+    data = AdminActionModifySchema().load(request.json)
+    result, status = AdminController.modify_admin_action_endpoint(admin_id, data)
+    return jsonify(result), status
 
 
-@api_admin_bp.route('/admin_actions/grant_premium', methods=['POST'])
-def admin_actions_post():
+@api_admin_bp.route('/admin/action', methods=['POST'])
+@check_authorization
+@check_role_admin
+def admin_actions_post(admin_id, **kwargs):
     """
     Выдать премиум-подписку
     """
-    access_token = request.headers.get("Authorization")
-    if not access_token:
-        return jsonify({"success": False, "message": "Token missing"}), 401
-    admin_id = AdminController.get_id_from_access_token(access_token)
-    if not admin_id:
-        return jsonify({"success": False, "message": "Invalid token"}), 401
+    data = AdminGrantPremiumSchema().load(request.json)
+    result, status = AdminController.grant_premium_endpoint(admin_id, data['user_id'])
+    return jsonify(result), status
+
+
+@api_admin_bp.route('/admin/profile', methods=['GET'])
+@check_authorization
+@check_role_admin
+def get_admin_profile(admin_id, **kwargs):
+    """
+    Профиль администратора
+    """
+    response, status = AdminController.get_profile_data(admin_id)
     try:
-        data = AdminGrantPremiumSchema().load(request.json)
-        result, status = AdminController.grant_premium_endpoint(admin_id, data['user_id'])
-        return jsonify(result), status
-    except ValidationError as ve:
-        return jsonify({"success": False, "errors": ve.messages}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+        serialized_response = AdminProfileSchema().dump(response)
+    except ValidationError:
+        raise
+    return jsonify(serialized_response), status
+
+
+@api_admin_bp.route('/admin/statistics', methods=['GET'])
+@check_authorization
+@check_role_admin
+def admin_route_statistics(**kwargs):
+    """
+    Получить статистику админа
+    """
+    period = request.args.get('period')
+    response, status = AdminController.get_admin_statistics(period)
+    response = AdminStatisticsSchema().dump(response)
+    return jsonify(response), status

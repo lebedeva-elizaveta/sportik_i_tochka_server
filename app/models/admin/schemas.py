@@ -17,3 +17,20 @@ class AdminGrantPremiumSchema(Schema):
 class AdminActionModifySchema(Schema):
     user_id = fields.Int(required=True)
     action = fields.Str(required=True, validate=lambda x: x.upper() in ["BLOCK", "UNBLOCK", "REVOKE_PREMIUM"])
+
+
+class AdminProfileSchema(Schema):
+    name = fields.String(required=True)
+    image = fields.String(required=False)
+
+
+class AdminGraphData(Schema):
+    date = fields.Str(required=True)
+    users_with_premium = fields.Int(required=True)
+    users_without_premium = fields.Int(required=True)
+
+
+class AdminStatisticsSchema(Schema):
+    total_users = fields.Int(required=True)
+    premium_users = fields.Int(required=True)
+    graph_data = fields.List(fields.Nested(AdminGraphData()))

@@ -1,30 +1,47 @@
 from flask import Blueprint, request, jsonify
 
+from app.decorators import check_authorization, check_role_user
+from app.models.card.controller import CardController
+from app.models.card.schemas import CardDataSchema
 from app.models.premium.controller import PremiumController
-from app.models.user.controller import UserController
 
 api_premium_bp = Blueprint('premium', __name__)
 
 
-@api_premium_bp.route('/buy_premium', methods=['POST'])
-def buy_premium():
+@api_premium_bp.route('/premium', methods=['GET'])
+@check_authorization
+@check_role_user
+def get_cards(user_id, **kwargs):
+    """
+    Пользователь видит все свои карты перед покупкой
+    """
+    response, status = CardController.get_user_cards(user_id)
+    if isinstance(response, list):
+        serialized_response = CardDataSchema(many=True).dump(response)
+        return jsonify(serialized_response), status
+    else:
+        return jsonify(response), status
+
+
+@api_premium_bp.route('/premium', methods=['POST'])
+@check_authorization
+@check_role_user
+def buy_premium(user_id, **kwargs):
     """
     Купить премиум
     """
-    try:
-        access_token = request.headers.get('Authorization')
-        user_id = UserController.get_id_from_access_token(access_token)
-        if not user_id:
-            return jsonify({"success": False}), 401
-        user = UserController.get_by_id(user_id)
-        if not user:
-            return jsonify({"success": False}), 404
-        try:
-            card_data = request.json
-            result, status = PremiumController.buy_premium(user_id, card_data)
-            return jsonify(result), status
-        except Exception as e:
-            return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
-    except Exception as e:
-        return jsonify({"success": False, "error": f"An unexpected error occurred: {e}"}), 500
+    card_data = request.json
+    card_data = CardDataSchema().load(card_data)
+    result, status = PremiumController.buy_premium(user_id, card_data)
+    return jsonify(result), status
 
+
+@api_premium_bp.route('/premium/cancel', methods=['PUT'])
+@check_authorization
+@check_role_user
+def cancel_premium(user_id, **kwargs):
+    """
+    Отменить премиум
+    """
+    result, status = PremiumController.cancel_premium(user_id)
+    return jsonify(result), status
