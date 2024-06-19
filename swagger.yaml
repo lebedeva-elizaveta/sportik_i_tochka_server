@@ -1192,17 +1192,64 @@ paths:
             type: object
             $ref: '#/components/schemas/NotFoundException'
   /password:
-    put:
+    post:
       tags:
         - "Восстановление пароля"
-      summary: "Восстановить пароль"
-      description: "Восстанавливает забытый пароль"
+      summary: "Отправить сообщение на почту"
+      description: "Отправляет код подтверждения"
       parameters:
         - name: "email"
           in: "header"
           required: true
           type: "string"
           description: "Email пользователя"
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: MailResponse
+            properties:
+              success:
+                type: boolean
+                description: Сообщение отправлено на email
+        404:
+          description: Ошибка, если пользователь не найден
+          schema:
+            type: object
+            $ref: '#/components/schemas/NotFoundException'
+  /password/confirm:
+    post:
+      tags:
+        - "Восстановление пароля"
+      summary: "Подтвердить код"
+      description: "Подтверждает отправленный код"
+      parameters:
+        - name: "new_code"
+          in: "body"
+          required: true
+          type: "string"
+          description: "Код подтверждения пользователя"
+      responses:
+        200:
+          description: Успешный запрос
+          schema:
+            id: CodeResponse
+            properties:
+              success:
+                type: boolean
+                description: Код введен верно
+        403:
+          description: Доступ запрещен (Forbidden)
+          schema:
+            type: object
+            $ref: '#/components/schemas/InvalidRoleException'
+  /password/change:
+    put:
+      tags:
+        - "Восстановление пароля"
+      summary: "Восстановить пароль"
+      description: "Восстанавливает забытый пароль"
+      parameters:
         - name: "data"
           in: "body"
           required: true
@@ -1226,12 +1273,7 @@ paths:
             properties:
               success:
                 type: boolean
-                description: Успешное восстановление пароля
-        404:
-          description: Ошибка, если пользователь не найден
-          schema:
-            type: object
-            $ref: '#/components/schemas/NotFoundException'
+                description: Пароль восстановлен
         422:
           description: Ошибка, если введенные пароли не совпадают
           schema:
@@ -1242,3 +1284,4 @@ paths:
               error:
                 type: string
                 description: сообщение об ошибке
+
