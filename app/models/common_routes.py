@@ -108,7 +108,8 @@ def change_password():
 
 @api_bp.route('/password/confirm', methods=['POST'])
 def confirm_code():
-    new_code = request.json
+    data = request.json
+    new_code = data.get('confirmation_code')
     stored_code = session.get('confirmation_code')
     if new_code == stored_code:
         session.pop('confirmation_code', None)

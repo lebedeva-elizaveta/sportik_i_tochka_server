@@ -1227,8 +1227,14 @@ paths:
         - name: "new_code"
           in: "body"
           required: true
-          type: "string"
-          description: "Код подтверждения пользователя"
+          schema:
+            type: object
+            properties:
+              confirmation_code:
+                type: string
+                description: Код подтверждения пользователя
+            required:
+              - confirmation_code
       responses:
         200:
           description: Успешный запрос
