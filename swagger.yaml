@@ -1191,7 +1191,7 @@ paths:
           schema:
             type: object
             $ref: '#/components/schemas/NotFoundException'
-  /password:
+  /password/send-email:
     post:
       tags:
         - "Восстановление пароля"
@@ -1212,29 +1212,36 @@ paths:
               message:
                 type: string
                 description: Сообщение отправлено на email
+              code_sent:
+                type: string
+                description: Код подтверждения
         404:
           description: Ошибка, если пользователь не найден
           schema:
             type: object
             $ref: '#/components/schemas/NotFoundException'
-  /password/confirm:
+  /password/get-code:
     post:
       tags:
         - "Восстановление пароля"
       summary: "Подтвердить код"
       description: "Подтверждает отправленный код"
       parameters:
-        - name: "new_code"
+        - name: "data"
           in: "body"
           required: true
           schema:
-            type: object
-            properties:
-              confirmation_code:
-                type: string
-                description: Код подтверждения пользователя
+            id: "CodeRequest"
             required:
-              - confirmation_code
+              - "code_sent"
+              - "received_code"
+            properties:
+              code_sent:
+                type: "string"
+                description: "Правильный код"
+              received_code:
+                type: "string"
+                description: "Код пользователя"
       responses:
         200:
           description: Успешный запрос
@@ -1256,6 +1263,11 @@ paths:
       summary: "Восстановить пароль"
       description: "Восстанавливает забытый пароль"
       parameters:
+        - name: "email"
+          in: "header"
+          required: true
+          type: "string"
+          description: "Email пользователя"
         - name: "data"
           in: "body"
           required: true
